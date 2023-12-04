@@ -43,7 +43,20 @@ The flow can be broadly broken up into the following sections:
 
     Within each `touchnerf_<rgb_depth|touch>..` folder are the following folders and contents:
 
-    `color` folder: contains a `transforms_train.json` which contains the transform (from world frame to camera frame) of each camera and the image path.
+    `color/` folder: contains a `transforms_train.json` which contains the transform (from world frame to camera frame) of each camera and the image path. It also contains a `train/` folder with all of the images in it. 
+
+    Sample image:
+
+    ![Local Image](data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
+
+
+    `depth/` folder:
+
+    `recorded_path/` folder: not used. But you can check it out.
+
+    `touch/` folder:
+
+    `touch_raw/` folder:
 
 
 
