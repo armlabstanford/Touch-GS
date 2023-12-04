@@ -8,6 +8,13 @@ Aiden Swann, Matt Strong, Won-Kyung Do
 
 This repo houses code and data for our work in Visual Tactile Neural fields.
 
+
+## Setup
+
+Install Blender
+
+## Flow
+
 The flow can be broadly broken up into the following sections:
 
 1. Data Collection
@@ -36,10 +43,16 @@ The flow can be broadly broken up into the following sections:
     |   |---...
     |---sim
         |---blender
-            |---tbd
+            |---dataset
     ```
 
     We expect a unified format for the raw data, but only require two sources of data: Images, $I_{cam}$, and DenseTact depth images, $D_{DT}$ which form dataset $\mathcal{D}$.
+
+
+    ### Blender data
+
+    Within the Blender folder, we have a `dataset` folder which contains the train views, test views, corresponding `transforms_<type>.json` file, and depth images (if depth supervision is desired). Note that the depth ground truth images (in `.EXR` format) are the ground truth and can serve as a sanity check when implementing NeRF loss functions that use depth supervision.
+
 
     Within each `touchnerf_<rgb_depth|touch>..` folder are the following folders and contents:
 
