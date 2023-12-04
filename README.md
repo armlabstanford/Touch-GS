@@ -17,7 +17,7 @@ The flow can be broadly broken up into the following sections:
 
 2. Data
 
-    This contains the data in Blender in simulation and on the real robot. The format is as follows
+    This contains the data in Blender in simulation and on the real robot. The format is as follows:
 
 
     ```
@@ -25,6 +25,11 @@ The flow can be broadly broken up into the following sections:
     |---real
     |   |---touchnerf_<date-1>
             |---touchnerf_rgb_depth_<date-1>
+                |---color
+                |---depth
+                |---recorded_path
+                |---touch
+                |---touch_raw
             |---touchnerf_touch_1_<date-1>
             |---touchnerf_touch_2<date-1>
     |   |---touchnerf_<date-2>
@@ -36,12 +41,18 @@ The flow can be broadly broken up into the following sections:
 
     We expect a unified format for the raw data, but only require two sources of data: Images, $I_{cam}$, and DenseTact depth images, $D_{DT}$ which form dataset $\mathcal{D}$.
 
-2. Data Preprocessing
+    Within each `touchnerf_<rgb_depth|touch>..` folder are the following folders and contents:
+
+    `color` folder: contains a `transforms_train.json` which contains the transform (from world frame to camera frame) of each camera and the image path.
+
+
+
+3. Data Preprocessing
 
     Contains the code for processing RGB images and touches with the DenseTact.
 
 
-3. 
+4. 
 
 
 ## Misc
@@ -49,6 +60,17 @@ The flow can be broadly broken up into the following sections:
 1. The `legacy` folder contains prior code with a different approach that we had.
 
 2. The `utils` folder contains 
+
+## Environment Setup
+
+We use conda to run our experiments.
+
+
+## Running the Pipeline
+
+Running the pipeline end to end consists of the following steps:
+
+1. Collect Data
 
 
 
