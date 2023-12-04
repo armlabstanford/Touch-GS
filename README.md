@@ -1,5 +1,8 @@
-# Visual-Tactile-Neural-Field
+# Visual Tactile Neural Field
 Visual Tactile Neural Field (VTNF)
+
+Aiden Swann, Matt Strong, Won-Kyung Do
+
 
 ## Datasets 
 
