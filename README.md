@@ -50,22 +50,38 @@ The flow can be broadly broken up into the following sections:
     ![Local Image](data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
 
 
-    `depth/` folder:
+    `depth/` folder: contains the Intel Realsense depth images from experiments. We do not use these in our experiments however. This folder contains a `transforms_train.json` as well as a `train/` folder with a `.npy` and `.png` file that contains the Intel Realsense depth image. It it not recommended however.
 
     `recorded_path/` folder: not used. But you can check it out.
 
-    `touch/` folder:
+    `touch/` folder: contains the predicted depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each predicted depth in the `train/` folder has an `npy` file and `png` file associated with it.
 
-    `touch_raw/` folder:
+     ![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch/train/tr_7.jpg)
 
+
+    `touch_raw/` folder: contains the raw depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each raw depth in the `train/` folder has a `png` file associated with it.
+
+    Sample image:
+
+    ![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch_raw/train/t_58.jpg)
 
 
 3. Data Preprocessing
 
-    Contains the code for processing RGB images and touches with the DenseTact.
+    Contains the code for processing RGB images and touches with the DenseTact. We have two separate pipelines for touch and RGB.
+
+    RGB camera images
 
 
-4. 
+
+
+
+4. NeRF training
+
+
+5. NeRF evaluation
+
+6. NeRF rendering and exporting
 
 
 ## Misc
