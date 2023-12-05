@@ -107,7 +107,7 @@ Steps:
 
 2. After running colmap, we will have the output as camera poses, images and the corresponding points detected with them. 
 
-3. We ran colmap
+3. We use a DPT (Dense Prediction Transformer) model to compute the 
 
 
     
