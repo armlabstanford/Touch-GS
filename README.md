@@ -4,6 +4,8 @@ Visual Tactile Neural Field (VTNF)
 <!-- insert image here -->
 ![Local Image](misc_imgs/mvp_architecture.png)
 
+
+
 Aiden Swann, Matt Strong, Won-Kyung Do
 
 This repo houses code and data for our work in Visual Tactile Neural fields.
@@ -66,23 +68,23 @@ The flow can be broadly broken up into the following sections:
 
     Sample image:
 
-    ![Local Image](./data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
+![Local Image](./data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
 
 
-    `depth/` folder: contains the Intel Realsense depth images from experiments. We do not use these in our experiments however. This folder contains a `transforms_train.json` as well as a `train/` folder with a `.npy` and `.png` file that contains the Intel Realsense depth image. It it not recommended however.
+`depth/` folder: contains the Intel Realsense depth images from experiments. We do not use these in our experiments however. This folder contains a `transforms_train.json` as well as a `train/` folder with a `.npy` and `.png` file that contains the Intel Realsense depth image. It it not recommended however.
 
-    `recorded_path/` folder: not used. But you can check it out.
+`recorded_path/` folder: not used. But you can check it out.
 
-    `touch/` folder: contains the predicted depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each predicted depth in the `train/` folder has an `npy` file and `png` file associated with it.
+`touch/` folder: contains the predicted depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each predicted depth in the `train/` folder has an `npy` file and `png` file associated with it.
 
-     ![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch/train/tr_7.jpg)
+![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch/train/tr_7.jpg)
 
 
-    `touch_raw/` folder: contains the raw depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each raw depth in the `train/` folder has a `png` file associated with it.
+`touch_raw/` folder: contains the raw depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each raw depth in the `train/` folder has a `png` file associated with it.
 
-    Sample image:
+Sample image:
 
-    ![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch_raw/train/t_58.jpg)
+![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch_raw/train/t_58.jpg)
 
 
 3. Data Preprocessing
@@ -91,28 +93,30 @@ The flow can be broadly broken up into the following sections:
 
     ## RGB camera images
 
-    ![RGB Flow](misc_imgs/rgb_flow.png)
+![Local Image](misc_imgs/rgb_flow.png)
 
-    The goal of the RGB camera flow is to 
 
-    Steps:
 
-    1. With the camera images, we first run a tool called [Colmap](https://colmap.github.io/) to compute the camera poses (with an arbitrary frame and scale compared to the real world ).
+The goal of the RGB camera flow is to 
 
-    We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
+Steps:
 
-    2. 
+1. With the camera images, we first run a tool called [Colmap](https://colmap.github.io/) to compute the camera poses (with an arbitrary frame and scale compared to the real world ).
 
-    3. 
+We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
+
+2. 
+
+3. 
 
 
     
     ## Touch
-    ![Touch Flow](misc_imgs/touch_flow.png)
+![Touch Flow](misc_imgs/touch_flow.png)
 
-    At a high level, the touch pipeline first requires a set of DenseTact touches (each has an associated point cloud) and the corresponding transforms from world frame to DT frame.
+At a high level, the touch pipeline first requires a set of DenseTact touches (each has an associated point cloud) and the corresponding transforms from world frame to DT frame.
 
-    We can then construct a raw point cloud here by simply combining them. The next step is to use a Gaussian Process Implicit Surface (GPIS) to create a 3d representation of a surface with the object(s). The GPIS gives us where the surface would be as well as variance. To create the resulting depth and uncertainty images. We can perform ray marching on the RGB camera poses to compute for a given camera, what would the depth and uncertainty view based on touches on an object?
+We can then construct a raw point cloud here by simply combining them. The next step is to use a Gaussian Process Implicit Surface (GPIS) to create a 3d representation of a surface with the object(s). The GPIS gives us where the surface would be as well as variance. To create the resulting depth and uncertainty images. We can perform ray marching on the RGB camera poses to compute for a given camera, what would the depth and uncertainty view based on touches on an object?
 
     ## Fusion of Vision and Touch
     
