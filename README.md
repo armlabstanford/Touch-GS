@@ -66,7 +66,7 @@ The flow can be broadly broken up into the following sections:
 
     Sample image:
 
-    ![Local Image](data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
+    ![Local Image](./data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
 
 
     `depth/` folder: contains the Intel Realsense depth images from experiments. We do not use these in our experiments however. This folder contains a `transforms_train.json` as well as a `train/` folder with a `.npy` and `.png` file that contains the Intel Realsense depth image. It it not recommended however.
