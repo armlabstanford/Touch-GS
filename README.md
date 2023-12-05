@@ -13,7 +13,31 @@ This repo houses code and data for our work in Visual Tactile Neural fields.
 
 ## Setup
 
-Install Blender
+The pipeline has been tested on Ubuntu 22.04.
+
+**Data Collection**
+
+1. Install Blender, which we use as for simulated data to train a NeRF. Steps can be found [here](https://docs.blender.org/manual/en/latest/getting_started/installing/linux.html).
+
+Once Blender is installed, 
+
+**Data**
+
+N/A. The data will be the output from the data collection.
+
+**Data Fusion**
+
+RBG Depth Computation
+
+
+
+Touch Data Computation
+
+
+**NeRF Training, Rendering, Exporting**
+
+
+
 
 ## Flow
 
@@ -97,7 +121,7 @@ Sample image:
 
 
 
-The goal of the RGB camera flow is to 
+The goal of the RGB camera flow is to compute dense depth and uncertainty maps from RGB images.
 
 Steps:
 
@@ -105,10 +129,13 @@ Steps:
 
     We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
 
-2. After running colmap, we will have the output as camera poses, images and the corresponding points detected with them. 
+2. After running colmap, we will have the output as camera poses, images and the corresponding points detected with them. From here, we perform some kind of dense reconstruction to get a fused point cloud that gives a rough estimate of the surfaces.
 
-3. We use a DPT (Dense Prediction Transformer) model to compute the 
+3. We use a DPT (Dense Prediction Transformer) model to compute a dense prediction map from an image. We can then *refine* this dense prediction map with the very dense colmap points to align the dense prediction and make sure the corresponding depth and colmap points are very close.
 
+4. With the colmap points and dense depth map, compute the uncertainty of the image w.r.t depth. As a MVP, we use nearest neighbor uncertainty; e.g., points in the depth image farther away from colmap points have more uncertainty (which makes sense)
+
+5. Store these depth and uncertainty maps.
 
     
 
@@ -119,12 +146,14 @@ At a high level, the touch pipeline first requires a set of DenseTact touches (e
 
 We can then construct a raw point cloud here by simply combining them. The next step is to use a Gaussian Process Implicit Surface (GPIS) to create a 3d representation of a surface with the object(s). The GPIS gives us where the surface would be as well as variance. To create the resulting depth and uncertainty images. We can perform ray marching on the RGB camera poses to compute for a given camera, what would the depth and uncertainty view based on touches on an object?
 
-    ## Fusion of Vision and Touch
+    
+
+## Fusion of Vision and Touch
     
 
 
     
-    DenseTact touch images
+DenseTact touch images
 
 
 
@@ -132,17 +161,23 @@ We can then construct a raw point cloud here by simply combining them. The next 
 
 4. NeRF training
 
+We use `nerfstudio` and `gaussian_splatting` for training nerfs. We have forked version of both repos with support for new loss functions that support dense depth with uncertainty.
+
 
 5. NeRF evaluation
 
+To evaluate trained NeRFs, simply run: (TBD)
+
 6. NeRF rendering and exporting
+
+To render and export trained NeRF renderings to a point cloud, run the following: (TBD)
 
 
 ## Misc
 
 1. The `legacy` folder contains prior code with a different approach that we had.
 
-2. The `utils` folder contains 
+2. The `utils` folder contains useful utils such as a colmap command line tool.
 
 ## Environment Setup
 
