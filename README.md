@@ -103,15 +103,16 @@ Steps:
 
 1. With the camera images, we first run a tool called [Colmap](https://colmap.github.io/) to compute the camera poses (with an arbitrary frame and scale compared to the real world ).
 
-We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
+    We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
 
-2. 
+2. After running colmap, we will have the output as camera poses, images and the corresponding points detected with them. 
 
-3. 
+3. We ran colmap
 
 
     
-    ## Touch
+
+## Touch
 ![Touch Flow](misc_imgs/touch_flow.png)
 
 At a high level, the touch pipeline first requires a set of DenseTact touches (each has an associated point cloud) and the corresponding transforms from world frame to DT frame.
