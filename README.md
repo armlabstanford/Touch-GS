@@ -53,6 +53,12 @@ The flow can be broadly broken up into the following sections:
 
     Within the Blender folder, we have a `dataset` folder which contains the train views, test views, corresponding `transforms_<type>.json` file, and depth images (if depth supervision is desired). Note that the depth ground truth images (in `.EXR` format) are the ground truth and can serve as a sanity check when implementing NeRF loss functions that use depth supervision.
 
+    Steps to Run Blender
+    
+    ========TBD============
+    
+    
+
 
     Within each `touchnerf_<rgb_depth|touch>..` folder are the following folders and contents:
 
@@ -83,7 +89,37 @@ The flow can be broadly broken up into the following sections:
 
     Contains the code for processing RGB images and touches with the DenseTact. We have two separate pipelines for touch and RGB.
 
-    RGB camera images
+    ## RGB camera images
+
+    ![RGB Flow](misc_imgs/rgb_flow.png)
+
+    The goal of the RGB camera flow is to 
+
+    Steps:
+
+    1. With the camera images, we first run a tool called [Colmap](https://colmap.github.io/) to compute the camera poses (with an arbitrary frame and scale compared to the real world ).
+
+    We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
+
+    2. 
+
+    3. 
+
+
+    
+    ## Touch
+    ![Touch Flow](misc_imgs/touch_flow.png)
+
+    At a high level, the touch pipeline first requires a set of DenseTact touches (each has an associated point cloud) and the corresponding transforms from world frame to DT frame.
+
+    We can then construct a raw point cloud here by simply combining them. The next step is to use a Gaussian Process Implicit Surface (GPIS) to create a 3d representation of a surface with the object(s). The GPIS gives us where the surface would be as well as variance. To create the resulting depth and uncertainty images. We can perform ray marching on the RGB camera poses to compute for a given camera, what would the depth and uncertainty view based on touches on an object?
+
+    ## Fusion of Vision and Touch
+    
+
+
+    
+    DenseTact touch images
 
 
 
