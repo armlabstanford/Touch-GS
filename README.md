@@ -1,5 +1,4 @@
 # Visual Tactile Neural Field
-Visual Tactile Neural Field (VTNF)
 
 <!-- insert image here -->
 ![Local Image](misc_imgs/mvp_architecture.png)
