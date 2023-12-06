@@ -1,0 +1,3 @@
+[submodule "data_preprocessing/touch/gpis"]
+	path = data_preprocessing/touch/gpis
+	url = https://github.com/armlabstanford/GPIS
