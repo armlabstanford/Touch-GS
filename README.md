@@ -10,7 +10,7 @@ Aiden Swann, Matt Strong, Won-Kyung Do
 This repo houses code and data for our work in Visual Tactile Neural fields.
 
 
-## Setup
+## Quick Start and Setup
 
 
 The pipeline has been tested on Ubuntu 22.04.
@@ -20,6 +20,21 @@ To clone the repo, since we have submodules, run the following command:
 
 ```bash
 git clone --recurse-submodules https://github.com/armlabstanford/Visual-Tactile-Neural-Field
+```
+
+## Quick Start With Mock Data
+
+
+```bash
+# install nerfstudio
+cd train/nerfs/nerfstudio
+pip install --upgrade pip setuptools
+pip install -e .
+
+# run nerfstudio
+
+
+
 ```
 
 
@@ -170,7 +185,18 @@ DenseTact touch images
 
 4. NeRF training
 
-We use `nerfstudio` and `gaussian_splatting` for training nerfs. We have forked version of both repos with support for new loss functions that support dense depth with uncertainty.
+We use forked versions of  `nerfstudio` and `gaussian_splatting` for training nerfs. We have forked version of both repos with support for new loss functions that support dense depth with uncertainty.
+
+To install nerfstudio:
+
+```bash
+cd train/nerfs/nerfstudio
+pip install --upgrade pip setuptools
+pip install -e .
+```
+
+
+To install gaussian splatting
 
 
 5. NeRF evaluation
