@@ -12,7 +12,17 @@ This repo houses code and data for our work in Visual Tactile Neural fields.
 
 ## Setup
 
+
 The pipeline has been tested on Ubuntu 22.04.
+
+**Repo Cloning**
+To clone the repo, since we have submodules, run the following command:
+
+```bash
+git clone --recurse-submodules https://github.com/armlabstanford/Visual-Tactile-Neural-Field
+```
+
+
 
 **Data Collection**
 

@@ -1,3 +1,9 @@
 [submodule "data_preprocessing/touch/gpis"]
 	path = data_preprocessing/touch/gpis
 	url = https://github.com/armlabstanford/GPIS
+[submodule "train/nerfs/nerfstudio"]
+	path = train/nerfs/nerfstudio
+	url = https://github.com/peasant98/nerfstudio
+[submodule "train/nerfs/gaussian_splatting"]
+	path = train/nerfs/gaussian_splatting
+	url = https://github.com/peasant98/gaussian-splatting
