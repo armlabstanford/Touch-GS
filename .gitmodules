@@ -7,3 +7,6 @@
 [submodule "train/nerfs/gaussian_splatting"]
 	path = train/nerfs/gaussian_splatting
 	url = https://github.com/peasant98/gaussian-splatting
+[submodule "dinov2"]
+	path = dinov2
+	url = https://github.com/peasant98/dinov2
