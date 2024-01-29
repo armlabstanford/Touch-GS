@@ -1,0 +1,103 @@
+<package>
+  <name>dtv2_tactile_camera</name>
+  <version>0.1.1</version>
+  <description>camera image publisher package </description>
+
+
+  <maintainer email="wkdo@stanford.edu">Won Kyung Do</maintainer>
+<author email="wkdo@stanford.edu">Won Kyung Do</author>
+
+
+  <license>BSD</license>
+
+  <url type="website">https://arm.stanford.edu/</url>
+ 
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+ 
+  <build_depend>image_transport</build_depend> 
+  <build_depend>roscpp</build_depend> 
+  <build_depend>std_msgs</build_depend> 
+  <build_depend>std_srvs</build_depend> 
+  <build_depend>sensor_msgs</build_depend> 
+  <build_depend>ffmpeg</build_depend>
+  <build_depend>camera_info_manager</build_depend>
+
+
+  <build_depend>pcl_ros</build_depend>
+  <build_depend>pcl_conversions</build_depend>
+
+
+  <build_depend>pluginlib</build_depend>
+
+
+  <build_depend version_gte="1.11.13">cv_bridge</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>gtk3</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>message_filters</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>nodelet</build_depend>
+  <build_depend>rosconsole</build_depend>
+
+  <build_depend>pluginlib</build_depend>
+  <build_depend>rosbag</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>geometric_shapes</build_depend>
+
+
+  <build_depend>libpcl-all-dev</build_depend>
+  <!-- <build_depend>libpcl-all</build_depend> -->
+  <build_depend>eigen</build_depend>
+
+
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>tf2_eigen</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  
+  <build_depend>libpcl-all-dev</build_depend>
+  <run_depend>libpcl-all</run_depend>
+
+  <run_depend>tf2_ros</run_depend>
+  <run_depend>tf2_eigen</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
+  <run_depend>message_runtime</run_depend>
+
+
+  <run_depend>eigen</run_depend>
+  <run_depend>pcl_ros</run_depend>
+  <run_depend>pcl_conversions</run_depend>
+  <!-- <run_depend>libpcl-all</run_depend> -->
+  <!-- <run_depend>libpcl-all-dev</run_depend> -->
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+  <run_depend>pluginlib</run_depend>
+  <run_depend>moveit_visual_tools</run_depend>
+  <run_depend>joy</run_depend>
+  <run_depend>rosbag</run_depend>
+  <run_depend>message_runtime</run_depend>
+
+
+  <run_depend version_gte="1.11.13">cv_bridge</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>gtk3</run_depend>
+  <run_depend>message_filters</run_depend>
+  <run_depend>nodelet</run_depend>
+  <run_depend>rosconsole</run_depend>
+
+  <run_depend>image_transport</run_depend> 
+  <run_depend>roscpp</run_depend> 
+  <run_depend>std_msgs</run_depend> 
+  <run_depend>std_srvs</run_depend> 
+  <run_depend>sensor_msgs</run_depend> 
+  <run_depend>ffmpeg</run_depend>
+  <run_depend>camera_info_manager</run_depend>
+  <run_depend>v4l-utils</run_depend>
+
+</package>

@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<launch>
+
+<arg name="namespace"               default="gp"/>
+
+<node pkg="dtv2_tactile_camera" name="pythonnode1" type="cam_ros.py" output="screen" ns="$(arg namespace)"> 
+  <param name="camname1" value="/dev/Densetact_5cm_1" />
+
+</node>
+
+
+<!-- run identical node with different camera name  -->
+
+
+</launch>

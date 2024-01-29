@@ -1,0 +1,11 @@
+venv/
+.idea/
+.ipynb_checkpoints/
+.vscode/
+__pycache__/
+pci_node.cpp
+pcl_node_succeed.cpp
+pcl_visualizer_demo.cpp
+main_camera (copy).py
+main_camera_triedtwonode_error.py
+me326_won_detect_pick.py

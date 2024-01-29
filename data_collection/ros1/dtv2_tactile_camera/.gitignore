@@ -1,0 +1,6 @@
+.vscode/
+src/Img2Depth/force_sensor_*.pth
+src/Img2Depth/force_sensor_5.pth
+src/Img2Depth/position_sensor_*.pth
+src/Img2Depth/position_sensor_6.pth
+data/
