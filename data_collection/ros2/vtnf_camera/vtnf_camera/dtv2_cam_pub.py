@@ -10,49 +10,115 @@ from std_msgs.msg import String
 import numpy as np
 import time
 from rclpy.node import Node
-
+import os
+import threading
 
 class camPublisher(Node):
     def __init__(self, camera_id=0):
         super().__init__('cam_publisher_{}'.format(camera_id))
         self.camera_id = camera_id
         queue_size = 1
-        self.pub_webcam = self.create_publisher(Image, 'vtnf/camera_{}'.format(camera_id), queue_size)
+        self.pub_dtv2 = self.create_publisher(Image, 'vtnf/camera_{}'.format(camera_id), queue_size)
 
         # self.pub_dtdepth = self.create_publisher(Image, 'depth', queue_size)
         # self.pub_dtcolor = self.create_publisher(Image, 'color', queue_size)
 
-        time_period = 0.005  # seconds
+        # time_period = 0.0001  # seconds
         
         # timer for callback 
-        self.timer = self.create_timer(time_period, self.timer_callback)
+        # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
+        # os.system("v4l2-ctl -d0 --set-parm=60")
 
         # self.cap = cv2.VideoCapture(self.camera_id)
-        self.cap = cv2.VideoCapture(self.camera_id)
+        # self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_FFMPEG)
         self.br = CvBridge()
-        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-        # self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
-        # disable autofocus
-        # self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-        # self.cap.set(cv2.CAP_PROP_SETTINGS, 1)
-        # camera frame rate 60 fps
-        # self.cap.set(cv2.CAP_PROP_FPS, 60)
 
-    def timer_callback(self):
-        ret, frame = self.cap.read()
-        if ret:
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            msg = self.br.cv2_to_imgmsg(frame, "bgr8")
-            self.pub_webcam.publish(msg)
-        else:
-            self.get_logger().info('No frame')
+
+        self.capture_thread = threading.Thread(target=self.capture_and_publish)
+        self.capture_thread.start()
+
+    def capture_and_publish(self):
+        print("OpenCV Version: {}".format(cv2.__version__))
+        cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
+        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_GSTREAMER)
+        if not (cap.isOpened()):
+            print("Cannot open the camera")
+
+        # cap = cv2.VideoCapture(self.camera_id)
+        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_DSHOW)
+
+        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
+        # # cap.set(cv2.CAP_PROP_FORMAT, -1)
+        # cap.set(cv2.CAP_PROP_FPS, 60)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+        cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+        cap.set(cv2.CAP_PROP_FPS, 30)
+        cap.set(cv2.CAP_PROP_AUTO_WB, 0)
+        cap.set(cv2.CAP_PROP_APERTURE, 150)
+
+
+        # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
+        # os.system("v4l2-ctl -d0 --set-parm=60")
+
+        print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # show fourcc code in interpretable way
+        fourcc = cap.get(cv2.CAP_PROP_FOURCC)
+        fourcc = int(fourcc)
+        fourcc = fourcc.to_bytes(4, 'little').decode()
+        print(fourcc)
+        print(cap.get(cv2.CAP_PROP_FOURCC))
+        print(cap.get(cv2.CAP_PROP_AUTOFOCUS))
+        print(cap.get(cv2.CAP_PROP_SETTINGS))
+        print(cap.get(cv2.CAP_PROP_FPS))
+
+
+        while rclpy.ok():
+            # print out how much time it takes to capture and publish
+            start_time = time.time()
+
+            
+            ret, frame = cap.read()
+            if not ret:
+                self.get_logger().error('Failed to capture frame')
+                break
+
+            # msg = self.br.cv2_to_imgmsg(frame, 'bgr8')
+            msg = self.br.cv2_to_imgmsg(frame)
+            self.pub_dtv2.publish(msg)
+
+            # cv2.imshow('frame', frame)
+            # if cv2.waitKey(1) & 0xFF == ord('q'): # makes about 40fps.. 
+            #     break
+
+            # print out how much time it takes to capture and publish
+            end_time = time.time()
+            # print("time: {}".format(end_time - start_time))
+
+    # def capture_and_publish(self):
+    #     ret, frame = self.cap.read()
+    #     if ret:
+    #         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #         # msg = self.br.cv2_to_imgmsg(frame, "bgr8")
+    #         msg = self.br.cv2_to_imgmsg(frame)
+    #         self.pub_webcam.publish(msg)
+    #     else:
+    #         self.get_logger().info('No frame')
 
 def main(args=None):
     rclpy.init(args=args)
-    cam_pub = camPublisher(camera_id = 0)
+    # get camera_id among ros2 parameters
+    
+
+    
+    cam_pub = camPublisher(camera_id = 2)
 
     rclpy.spin(cam_pub)
+    cam_pub.capture_thread.join()
     cam_pub.destroy_node()
     rclpy.shutdown()
 

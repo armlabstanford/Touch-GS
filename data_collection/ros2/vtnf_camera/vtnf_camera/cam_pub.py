@@ -11,6 +11,7 @@ import numpy as np
 import time
 from rclpy.node import Node
 import os
+import threading
 
 class camPublisher(Node):
     def __init__(self, camera_id=0):
@@ -22,29 +23,32 @@ class camPublisher(Node):
         # self.pub_dtdepth = self.create_publisher(Image, 'depth', queue_size)
         # self.pub_dtcolor = self.create_publisher(Image, 'color', queue_size)
 
-        time_period = 0.005  # seconds
+        # time_period = 0.0001  # seconds
         
         # timer for callback 
-        os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
-        os.system("v4l2-ctl -d0 --set-parm=60")
-        # self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
-        self.cap = cv2.VideoCapture(self.camera_id)
-        # self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_DSHOW)
+        # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
+        # os.system("v4l2-ctl -d0 --set-parm=60")
+
+        # self.cap = cv2.VideoCapture(self.camera_id)
+        # self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_FFMPEG)
         self.br = CvBridge()
+        # self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
 
-        if not (self.cap.isOpened()):
-            print("Cannot open the webcam")
+        # if not (self.cap.isOpened()):
+        #     print("Cannot open the webcam")
 
-        W, H = 1920, 1080
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
-        self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter.fourcc('M','J','P','G'))
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
-        # https://github.com/antmicro/ros2-camera-node/tree/main
-        
+        # W, H = 1920, 1080
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
+        # # fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+        # # self.cap.set(cv2.CAP_PROP_FOURCC, fourcc)
+        # self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter.fourcc('M','J','P','G'))
+        # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, W)
+        # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, H)
+        # # https://github.com/antmicro/ros2-camera-node/tree/main
+        # # https://stackoverflow.com/questions/69029560/when-i-build-opencv-it-does-not-recognise-my-installed-ffmpeg
 
-        # self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+        # # self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
         # self.cap.set(cv2.CAP_PROP_FPS, 60)
 
 
@@ -54,32 +58,125 @@ class camPublisher(Node):
         # # # camera frame rate 60 fps
 
         # print out camera properties
-        print('camera properties')
-        print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        print(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        print(self.cap.get(cv2.CAP_PROP_FOURCC))
-        print(self.cap.get(cv2.CAP_PROP_AUTOFOCUS))
-        print(self.cap.get(cv2.CAP_PROP_SETTINGS))
-        print(self.cap.get(cv2.CAP_PROP_FPS))
+        # print('camera properties')
+        # print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # print(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # print(self.cap.get(cv2.CAP_PROP_FOURCC))
+        # print(self.cap.get(cv2.CAP_PROP_AUTOFOCUS))
+        # print(self.cap.get(cv2.CAP_PROP_SETTINGS))
+        # print(self.cap.get(cv2.CAP_PROP_FPS))
 
 
-        self.timer = self.create_timer(time_period, self.timer_callback)
+        self.capture_thread = threading.Thread(target=self.capture_and_publish)
+        self.capture_thread.start()
 
+    def capture_and_publish(self):
+        print("OpenCV Version: {}".format(cv2.__version__))
+        cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
+        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_GSTREAMER)
 
-    def timer_callback(self):
-        ret, frame = self.cap.read()
-        if ret:
-            # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            msg = self.br.cv2_to_imgmsg(frame, "bgr8")
+        # cap = cv2.VideoCapture(self.camera_id)
+        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_DSHOW)
+
+        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
+        # # cap.set(cv2.CAP_PROP_FORMAT, -1)
+        # cap.set(cv2.CAP_PROP_FPS, 60)
+
+        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
+        cap.set(cv2.CAP_PROP_FPS, 60)
+        # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
+        # os.system("v4l2-ctl -d0 --set-parm=60")
+
+        print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # show fourcc code in interpretable way
+        fourcc = cap.get(cv2.CAP_PROP_FOURCC)
+        fourcc = int(fourcc)
+        fourcc = fourcc.to_bytes(4, 'little').decode()
+        print(fourcc)
+        print(cap.get(cv2.CAP_PROP_FOURCC))
+        print(cap.get(cv2.CAP_PROP_AUTOFOCUS))
+        print(cap.get(cv2.CAP_PROP_SETTINGS))
+        print(cap.get(cv2.CAP_PROP_FPS))
+
+# docker run \
+#   -e DISPLAY=$DISPLAY \
+#   -v $HOME/.Xauthority:/wkdo/.Xauthority:ro \
+#   -v ~/catkin_ws/:/catkin_ws \
+#    noetic_wkdo
+# docker run -it \
+#    -e DISPLAY=$DISPLAY \
+#    -v /tmp/.X11-unix:/tmp/.X11-unix \
+#    -v ~/catkin_ws/:/catkin_ws \
+#    --device=/dev/dri:/dev/dri \
+#   noetic_wkdo
+# docker run -it \
+#    --net=host \
+#    -e DISPLAY=$DISPLAY \
+#    -v $HOME/.Xauthority:/root/.Xauthority:rw \
+#    -v /tmp/.X11-unix:/tmp/.X11-unix \
+#    -v ~/catkin_ws/:/catkin_ws \
+#   noetic_wkdo
+# docker run -it --rm \
+#     --privileged \
+#     --network host \
+#     -e NVIDIA_VISIBLE_DEVICES=all \
+#     -e NVIDIA_DRIVER_CAPABILITIES=all \
+#     --env="DISPLAY" \
+#     --env="QT_X11_NO_MITSHM=1" \
+#     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+#     --name "noetic_wkdo" \
+#     --runtime nvidia \
+#     xrf-robot-repo \
+#     /bin/bash
+
+        while rclpy.ok():
+            # print out how much time it takes to capture and publish
+            start_time = time.time()
+
+            
+            ret, frame = cap.read()
+            if not ret:
+                self.get_logger().error('Failed to capture frame')
+                break
+
+            # msg = self.br.cv2_to_imgmsg(frame, 'bgr8')
+            msg = self.br.cv2_to_imgmsg(frame)
             self.pub_webcam.publish(msg)
-        else:
-            self.get_logger().info('No frame')
+            # cv2.imshow('frame', frame)
+            # # make there is no delay, not even 1 ms
+
+
+            
+            # if cv2.waitKey(1) & 0xFF == ord('q'): # makes about 40fps.. 
+            # # if 0xFF == ord('q'):
+
+            #     break
+
+            # print out how much time it takes to capture and publish
+            end_time = time.time()
+            # print("time: {}".format(end_time - start_time))
+
+    # def capture_and_publish(self):
+    #     ret, frame = self.cap.read()
+    #     if ret:
+    #         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    #         # msg = self.br.cv2_to_imgmsg(frame, "bgr8")
+    #         msg = self.br.cv2_to_imgmsg(frame)
+    #         self.pub_webcam.publish(msg)
+    #     else:
+    #         self.get_logger().info('No frame')
 
 def main(args=None):
     rclpy.init(args=args)
     cam_pub = camPublisher(camera_id = 0)
 
     rclpy.spin(cam_pub)
+    cam_pub.capture_thread.join()
     cam_pub.destroy_node()
     rclpy.shutdown()
 
