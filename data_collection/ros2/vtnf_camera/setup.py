@@ -3,11 +3,12 @@ from glob import glob
 import os
 
 package_name = 'vtnf_camera'
-
+submodules = "vtnf_camera/utils"
 setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(exclude=['test']),
+    # packages=[package_name, submodules],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),

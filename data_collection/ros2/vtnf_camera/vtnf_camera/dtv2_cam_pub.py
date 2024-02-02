@@ -10,15 +10,27 @@ from std_msgs.msg import String
 import numpy as np
 import time
 from rclpy.node import Node
-import os
+import os, re
 import threading
+from .utils.utils import get_video_device_number
 
 class camPublisher(Node):
-    def __init__(self, camera_id=0):
-        super().__init__('cam_publisher_{}'.format(camera_id))
-        self.camera_id = camera_id
+    def __init__(self):
+        super().__init__('cam_publisher_dt')
+
+        self.declare_parameter('camera_id', '/dev/video2')  # Default value if not provided
+
+        self.camera_id = self.get_parameter('camera_id').get_parameter_value().string_value
+        print("dt's camera id: {}".format(self.camera_id))
+
+        # self.device_num = 0
+        dtv2_device_number = get_video_device_number(self.camera_id)
+        print ("dtv2_device_number: ", dtv2_device_number)
+        self.camera_id = dtv2_device_number
+
+        self.camera_id = 0
         queue_size = 1
-        self.pub_dtv2 = self.create_publisher(Image, 'vtnf/camera_{}'.format(camera_id), queue_size)
+        self.pub_dtv2 = self.create_publisher(Image, 'vtnf/camera_{}'.format(self.camera_id), queue_size)
 
         # self.pub_dtdepth = self.create_publisher(Image, 'depth', queue_size)
         # self.pub_dtcolor = self.create_publisher(Image, 'color', queue_size)
@@ -51,15 +63,21 @@ class camPublisher(Node):
         # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
         # # cap.set(cv2.CAP_PROP_FORMAT, -1)
         # cap.set(cv2.CAP_PROP_FPS, 60)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
         cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
         cap.set(cv2.CAP_PROP_FPS, 30)
-        cap.set(cv2.CAP_PROP_AUTO_WB, 0)
+        cap.set(cv2.CAP_PROP_AUTO_WB, 1)
         cap.set(cv2.CAP_PROP_APERTURE, 150)
-
+        commands = [
+            ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c auto_exposure=3"),
+            ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c auto_exposure=1"),
+            ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c exposure_time_absolute="+str(150)),
+       ]
+        for c in commands: 
+            os.system(c)
 
         # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
         # os.system("v4l2-ctl -d0 --set-parm=60")
@@ -115,7 +133,7 @@ def main(args=None):
     
 
     
-    cam_pub = camPublisher(camera_id = 2)
+    cam_pub = camPublisher()
 
     rclpy.spin(cam_pub)
     cam_pub.capture_thread.join()
