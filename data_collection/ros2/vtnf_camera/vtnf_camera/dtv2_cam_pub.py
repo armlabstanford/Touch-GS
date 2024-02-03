@@ -3,11 +3,9 @@
 #### code for publishing the webcam feed as well as the DTv2 depth / color images
 import sys
 
-print(sys.exec_prefix)
-
-# sys.path.append('/home/wkdo/miniconda3/envs/densetact/lib/python3.8/site-packages')
+# print(sys.exec_prefix)
 sys.path.append('/home/wkdo/miniconda3/envs/dtros2/lib/python3.10/site-packages')
-# fdsalkj
+
 import torch
 
 import rclpy
@@ -28,6 +26,12 @@ from .Img2Depth.networks.STForce import DenseNet_Force
 class camPublisher(Node):
     def __init__(self):
         super().__init__('cam_publisher_dt')
+
+        # print("curr directory", os.getcwd())
+        path_base = os.getcwd()
+        os.chdir(os.path.join(path_base, "src/vtnf_camera/vtnf_camera/"))
+        # print("curr directory", os.getcwd())
+
 
         self.declare_parameter('camera_id', '/dev/video2')  # Default value if not provided
 
@@ -52,7 +56,8 @@ class camPublisher(Node):
 
         self.br = CvBridge()
 
-        ###### depth estimation 
+        ##################### depth estimation 
+
         sensornum = 2
         # array for determining whether the sensor can do position estimation and force estimation or not
         sen_pf = np.array([[1,1,1],
@@ -65,7 +70,11 @@ class camPublisher(Node):
                         [102,1,0]])
         # whether it use pos or force
         self.ispos = sen_pf[sen_pf[:,0]==sensornum][0,1]
-        
+        self.isforce = sen_pf[sen_pf[:,0]==sensornum][0,2]
+        self.isforce = 0 # disable force for now
+
+        self.imgidx = np.load('Img2Depth/calib_idx/mask_idx_{}.npy'.format(sensornum))
+        self.radidx = np.load('Img2Depth/calib_idx/pts_2ndmask_{}_80deg.npy'.format(sensornum))
 
         self.cen_x, self.cen_y, self.exposure = self.get_sensorinfo(sensornum)
         self.flag = 0
@@ -79,9 +88,34 @@ class camPublisher(Node):
         self.input_width = 640
         self.imgsize = int(self.input_width/2)
 
-        self.device_num = 0
-        self.imgidx = np.load('Img2Depth/calib_idx/mask_idx_{}.npy'.format(sensornum))
-        self.radidx = np.load('Img2Depth/calib_idx/pts_2ndmask_{}_80deg.npy'.format(sensornum))
+        if self.netuse: 
+            ######## model setting ######
+            if self.ispos == 1:
+                self.model_pos = DenseDepth(max_depth = 256, pretrained = False)
+                modelname = 'Img2Depth/position_sensor_{}.pth'.format(sensornum)
+                print(modelname)
+                checkpoint_pos = torch.load(modelname)
+                self.ispf = 'pos'
+                self.model_pos = torch.nn.DataParallel(self.model_pos)
+                self.model_pos.load_state_dict(checkpoint_pos['model'])
+                self.model_pos.eval()
+                self.model_pos.cuda()
+                # self.imgDepth = self.img2Depth(np.ones((640,640,3)))
+
+            if self.isforce == 1:
+                self.model_force = DenseNet_Force(pretrained= False)
+                modelname = 'Img2Depth/force_sensor_{}.pth'.format(sensornum)
+                print(modelname)
+                checkpoint_force = torch.load(modelname)
+                self.ispf = 'force'
+                self.model_force = torch.nn.DataParallel(self.model_force)
+                self.model_force.load_state_dict(checkpoint_force['model'])
+                self.model_force.eval()
+                self.model_force.cuda()
+                # self.imgForce = self.img2Force(np.ones((640,640,3)))
+
+
+        ##################### depth estimation done
 
 
         self.capture_thread = threading.Thread(target=self.capture_and_publish)
@@ -186,7 +220,27 @@ class camPublisher(Node):
             msg_depthshow = self.br.cv2_to_imgmsg(imgDepth_rgb, "rgb8")
             self.pub_dtv2_depthview.publish(msg_depthshow)
 
+            # if netuse: 
+            #     if self.isforce == 1:
+            #         forceEst = getForce(self.model_force, rectImg)
+            #         # print("Force: ", forceEst)
+            #         wrench_stamped_msg = WrenchStamped()
+            #             # Set the force and torque values in the message
+            #         wrench_stamped_msg.header.stamp = rospy.Time.now()
+            #         wrench_stamped_msg.wrench.force = Vector3(*forceEst[:3])
+            #         wrench_stamped_msg.wrench.torque = Vector3(*forceEst[3:])
+            #         self.force_pub.publish(wrench_stamped_msg)
+            #     if self.ispos == 1:
+            #         # depthImg = self.imgDepth(rectImg)
+            #         depthImg = getDepth(self.model_pos, rectImg)
+            #         msg_depth = self.br.cv2_to_imgmsg(depthImg, "8UC1")
+            #         msg_depth.header.stamp = rospy.get_rostime()
+            #         self.img_pub_depth.publish(msg_depth)
 
+            #         imgDepth_rgb = cv2.cvtColor(depthImg, cv2.COLOR_GRAY2RGB)
+            #         msg_depthshow = self.br.cv2_to_imgmsg(imgDepth_rgb, "rgb8")
+            #         msg_depthshow.header.stamp = rospy.get_rostime()
+            #         self.img_pub_depth_show.publish(msg_depthshow)
 
             # msg = self.br.cv2_to_imgmsg(frame, 'bgr8')
             msg = self.br.cv2_to_imgmsg(frame)
