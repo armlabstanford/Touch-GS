@@ -22,11 +22,15 @@ class camPublisher(Node):
 
         self.camera_id = self.get_parameter('camera_id').get_parameter_value().string_value
         print("webcam's camera id: {}".format(self.camera_id))
+        # self.device_num = 0
 
-        webcam_device_number = get_video_device_number(self.camera_id)
+        device_number = get_video_device_number(self.camera_id)
+        # if it's odd number, reduce by 1
+        if device_number % 2 == 1:
+            device_number -= 1
 
-        print ("webcam_device_number: ", webcam_device_number)
-        self.camera_id = webcam_device_number
+        print ("webcam_device_number: ", device_number)
+        self.camera_id = device_number
 
         queue_size = 1
         self.pub_webcam = self.create_publisher(Image, 'vtnf/camera_{}'.format(self.camera_id), queue_size)
@@ -42,15 +46,6 @@ class camPublisher(Node):
     def capture_and_publish(self):
         print("OpenCV Version: {}".format(cv2.__version__))
         cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
-        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_GSTREAMER)
-
-        # cap = cv2.VideoCapture(self.camera_id)
-        # cap = cv2.VideoCapture(self.camera_id, cv2.CAP_DSHOW)
-
-        # cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
-        # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
-        # # cap.set(cv2.CAP_PROP_FORMAT, -1)
-        # cap.set(cv2.CAP_PROP_FPS, 60)
 
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
@@ -120,28 +115,13 @@ class camPublisher(Node):
             msg = self.br.cv2_to_imgmsg(frame)
             self.pub_webcam.publish(msg)
             # cv2.imshow('frame', frame)
-            # # make there is no delay, not even 1 ms
-
-
             
             # if cv2.waitKey(1) & 0xFF == ord('q'): # makes about 40fps.. 
-            # # if 0xFF == ord('q'):
-
             #     break
 
-            # print out how much time it takes to capture and publish
             end_time = time.time()
             # print("time: {}".format(end_time - start_time))
 
-    # def capture_and_publish(self):
-    #     ret, frame = self.cap.read()
-    #     if ret:
-    #         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    #         # msg = self.br.cv2_to_imgmsg(frame, "bgr8")
-    #         msg = self.br.cv2_to_imgmsg(frame)
-    #         self.pub_webcam.publish(msg)
-    #     else:
-    #         self.get_logger().info('No frame')
 
 def main(args=None):
     rclpy.init(args=args)

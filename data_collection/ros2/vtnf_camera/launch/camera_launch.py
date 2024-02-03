@@ -10,7 +10,7 @@ def generate_launch_description():
             package='vtnf_camera',
             executable='cam_pub',
             name='webcam_node',
-            parameters=[{'camera_id': '/dev/webcam_1'}],
+            parameters=[{'camera_id': '/dev/webcam'}],
             output='screen'
 
         ),
@@ -18,7 +18,7 @@ def generate_launch_description():
             package='vtnf_camera',
             executable='dtv2_cam_pub',
             name='dtv2_node',
-            parameters=[{'camera_id': '/dev/dtv2_sen2'}],
+            parameters=[{'camera_id': '/dev/dtv2'}],
             output='screen'
 
         ),

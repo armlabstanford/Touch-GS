@@ -4,11 +4,12 @@ import os
 
 package_name = 'vtnf_camera'
 submodules = "vtnf_camera/utils"
+submodules2 = "vtnf_camera/Img2Depth"
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
-    # packages=[package_name, submodules],
+    # packages=find_packages(exclude=['test']),
+    packages=[package_name, submodules2, submodules],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),

@@ -1,0 +1,4 @@
+[console_scripts]
+cam_pub = vtnf_camera.cam_pub:main
+dtv2_cam_pub = vtnf_camera.dtv2_cam_pub:main
+
