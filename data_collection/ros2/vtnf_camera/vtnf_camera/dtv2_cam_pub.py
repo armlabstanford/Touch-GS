@@ -23,6 +23,8 @@ from .utils.utils import get_video_device_number
 from .Img2Depth.img2depthforce import getDepth, getForce
 from .Img2Depth.networks.DenseNet import DenseDepth
 from .Img2Depth.networks.STForce import DenseNet_Force
+
+
 class camPublisher(Node):
     def __init__(self):
         super().__init__('cam_publisher_dt')
@@ -51,7 +53,7 @@ class camPublisher(Node):
         queue_size = 1
         self.pub_dtv2 = self.create_publisher(Image, 'vtnf/camera_{}'.format(self.camera_id), queue_size)
         self.pub_dtv2_depth = self.create_publisher(Image, 'vtnf/depth', queue_size)
-        self.pub_dtv2_depthview = self.create_publisher(Image, 'vtnf/depthview', queue_size)
+        # self.pub_dtv2_depthview = self.create_publisher(Image, 'vtnf/depthview', queue_size)
 
 
         self.br = CvBridge()
@@ -117,9 +119,70 @@ class camPublisher(Node):
 
         ##################### depth estimation done
 
+        use_timer = True
+        # should we done with timer for ensuring stable frame rate?
+        # 25 frame rate
+        if use_timer:
+            timerspeed = 0.04
+            self.timer = self.create_timer(timerspeed, self.timer_callback)
+            print("OpenCV Version: {}".format(cv2.__version__))
+        
+        
+            self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
+            if not (self.cap.isOpened()):
+                print("Cannot open the camera")
 
-        self.capture_thread = threading.Thread(target=self.capture_and_publish)
-        self.capture_thread.start()
+
+            self.cap.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1024)
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 768)
+            self.cap.set(cv2.CAP_PROP_FPS, 30)
+            self.cap.set(cv2.CAP_PROP_AUTO_WB, 1)
+            self.cap.set(cv2.CAP_PROP_APERTURE, 150)
+            commands = [
+                ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c auto_exposure=3"),
+                ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c auto_exposure=1"),
+                ("v4l2-ctl --device /dev/video"+str(self.camera_id)+" -c exposure_time_absolute="+str(150)),
+        ]
+            for c in commands: 
+                os.system(c)
+
+
+            print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            print(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            # show fourcc code in interpretable way
+            fourcc = self.cap.get(cv2.CAP_PROP_FOURCC)
+            fourcc = int(fourcc)
+            fourcc = fourcc.to_bytes(4, 'little').decode()
+            print(fourcc)
+            print(self.cap.get(cv2.CAP_PROP_FOURCC))
+            print(self.cap.get(cv2.CAP_PROP_AUTOFOCUS))
+            print(self.cap.get(cv2.CAP_PROP_SETTINGS))
+            print(self.cap.get(cv2.CAP_PROP_FPS))
+
+        else:
+            self.capture_thread = threading.Thread(target=self.capture_and_publish)
+            self.capture_thread.start()
+
+    def timer_callback(self):
+        """
+            callback function for the publishing and reading the sensor img
+        """
+        ret, frame = self.cap.read()
+        if ret:
+
+            msg = self.br.cv2_to_imgmsg(frame)
+            self.pub_dtv2.publish(msg)
+
+            rectImg = self.rectifyimg(frame)
+
+            depthImg = getDepth(self.model_pos, rectImg)
+            # print("depthImg: ", depthImg.shape)
+            msg_depth = self.br.cv2_to_imgmsg(depthImg, "8UC1")
+            self.pub_dtv2_depth.publish(msg_depth)
+
+        else:
+            self.get_logger().error('Failed to capture frame')
 
     def get_sensorinfo(self, calibnum):
         """
@@ -209,16 +272,19 @@ class camPublisher(Node):
             if not ret:
                 self.get_logger().error('Failed to capture frame')
                 break
+            msg = self.br.cv2_to_imgmsg(frame)
+            self.pub_dtv2.publish(msg)
 
             rectImg = self.rectifyimg(frame)
 
             depthImg = getDepth(self.model_pos, rectImg)
+            # print("depthImg: ", depthImg.shape)
             msg_depth = self.br.cv2_to_imgmsg(depthImg, "8UC1")
             self.pub_dtv2_depth.publish(msg_depth)
 
-            imgDepth_rgb = cv2.cvtColor(depthImg, cv2.COLOR_GRAY2RGB)
-            msg_depthshow = self.br.cv2_to_imgmsg(imgDepth_rgb, "rgb8")
-            self.pub_dtv2_depthview.publish(msg_depthshow)
+            # imgDepth_rgb = cv2.cvtColor(depthImg, cv2.COLOR_GRAY2RGB)
+            # msg_depthshow = self.br.cv2_to_imgmsg(imgDepth_rgb, "rgb8")
+            # self.pub_dtv2_depthview.publish(msg_depthshow)
 
             # if netuse: 
             #     if self.isforce == 1:
@@ -243,8 +309,6 @@ class camPublisher(Node):
             #         self.img_pub_depth_show.publish(msg_depthshow)
 
             # msg = self.br.cv2_to_imgmsg(frame, 'bgr8')
-            msg = self.br.cv2_to_imgmsg(frame)
-            self.pub_dtv2.publish(msg)
 
 
             end_time = time.time()

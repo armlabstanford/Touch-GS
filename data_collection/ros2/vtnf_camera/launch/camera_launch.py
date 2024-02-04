@@ -11,7 +11,7 @@ def generate_launch_description():
             executable='cam_pub',
             name='webcam_node',
             parameters=[{'camera_id': '/dev/webcam'}],
-            output='screen'
+            # output='screen'
 
         ),
         Node(

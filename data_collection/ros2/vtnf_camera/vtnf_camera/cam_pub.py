@@ -40,8 +40,55 @@ class camPublisher(Node):
         # # https://github.com/antmicro/ros2-camera-node/tree/main
         # # https://stackoverflow.com/questions/69029560/when-i-build-opencv-it-does-not-recognise-my-installed-ffmpeg
 
-        self.capture_thread = threading.Thread(target=self.capture_and_publish)
-        self.capture_thread.start()
+
+        use_timer = True
+            # should we done with timer for ensuring stable frame rate?
+            # 50 frame rate
+        if use_timer:
+            timerspeed = 0.02
+            self.timer = self.create_timer(timerspeed, self.timer_callback)
+
+            print("OpenCV Version: {}".format(cv2.__version__))
+            self.cap = cv2.VideoCapture(self.camera_id, cv2.CAP_V4L2)
+
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
+            self.cap.set(cv2.CAP_PROP_FPS, 60)
+            # os.system("v4l2-ctl -d0 --set-fmt-video=width=1920,height=1080,pixelformat=0") 
+            # os.system("v4l2-ctl -d0 --set-parm=60")
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(1920))
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(1080))
+            self.cap.set(cv2.CAP_PROP_FPS, 60)
+
+            print(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            print(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            # show fourcc code in interpretable way
+            fourcc = self.cap.get(cv2.CAP_PROP_FOURCC)
+            fourcc = int(fourcc)
+            fourcc = fourcc.to_bytes(4, 'little').decode()
+            print(fourcc)
+            print(self.cap.get(cv2.CAP_PROP_FOURCC))
+            print(self.cap.get(cv2.CAP_PROP_AUTOFOCUS))
+            print(self.cap.get(cv2.CAP_PROP_SETTINGS))
+            print(self.cap.get(cv2.CAP_PROP_FPS))
+
+
+        else:
+            self.capture_thread = threading.Thread(target=self.capture_and_publish)
+            self.capture_thread.start()
+
+    def timer_callback(self):
+        ret, frame = self.cap.read()
+        if not ret:
+            self.get_logger().error('Failed to capture frame')
+            return
+        else:
+            # msg = self.br.cv2_to_imgmsg(frame, 'bgr8')
+            msg = self.br.cv2_to_imgmsg(frame)
+            self.pub_webcam.publish(msg)
+
 
     def capture_and_publish(self):
         print("OpenCV Version: {}".format(cv2.__version__))
