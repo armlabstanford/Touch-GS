@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import matplotlib.pyplot as plt
@@ -320,7 +322,7 @@ def render_image(points_2d, image_width, image_height, colors=None):
     plt.show()
     
     
-def render_depth_image(points_3d, image_width, image_height, colors=None):
+def render_depth_image(points_2d, image_width, image_height, colors=None):
     """
     Render the 3D points as an image.
 
@@ -390,9 +392,18 @@ if __name__ == "__main__":
     camera_id_to_pose = read_camera_poses("data_preprocessing/vision/point_cloud/sample_colmap_data/images_28.txt")
     camera_params = get_camera_params("data_preprocessing/vision/point_cloud/sample_colmap_data/cameras_28.txt")
     
+    
     # Load the point cloud
-    pcd = read_point_cloud('data_preprocessing/vision/point_cloud/sample_pc_data/fused_bunny_red.ply', visualize=True)
-
+    pcd = read_point_cloud('data_preprocessing/vision/point_cloud/sample_pc_data/fused_bunny_red.ply', visualize=False)
+    
+    mesh, densities = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd, depth=13)
+    
+    o3d.visualization.draw_geometries([mesh])
+    
+    o3d.io.write_triangle_mesh("output_mesh.ply", mesh)
+    
+    exit()
+    
     frames_n_points = []
     
     transformation_matrix = np.array([
@@ -411,8 +422,8 @@ if __name__ == "__main__":
     
     take_cam_pose_idx = 1
     take_cam_pose = None
-    idxs = [1, 20, 40, 60, 80, 100]
-    for i in range(1, 101):
+    for i in range(3, 50):
+        print(i)
         camera_position = np.array(camera_id_to_pose[i]['translation'])# Replace with actual position
         camera_orientation = camera_id_to_pose[i]['orientation']
         
@@ -434,10 +445,10 @@ if __name__ == "__main__":
         
         s = 1
         
-        fx = camera_params['focal_length'] * s / scale
-        fy = camera_params['focal_length'] * s / scale
-        cx = camera_params['c_x'] / scale
-        cy = camera_params['c_y'] / scale
+        fx = camera_params['focal_length']
+        fy = camera_params['focal_length']
+        cx = camera_params['c_x']
+        cy = camera_params['c_y']
         
         camera_intrinsics = {"focal_length": fx/scale, "cx": cx/scale, "cy": cy/scale}
         
@@ -448,52 +459,78 @@ if __name__ == "__main__":
         
         # mapping from units in blender to colmap is:
         
-        # camera_intrinsics = o3d.camera.PinholeCameraIntrinsic(image_width, image_height, fx/scale, fy/scale, cx/scale, cy/scale)
+        camera_intrinsics = o3d.camera.PinholeCameraIntrinsic(1800, 1100, fx, fy, cx, cy)
+        
+        renderer = o3d.visualization.rendering.OffscreenRenderer(1800, 1100)
+        renderer.setup_camera(camera_intrinsics, camera_pose)
+        
+        render_option = o3d.visualization.RenderOption()
+        render_option.point_size = 1.0  # for point cloud
+        render_option.mesh_show_back_face = True
+        
+        mat = o3d.visualization.rendering.MaterialRecord()
+        mat.shader = 'defaultUnlit'
+
+        # renderer.scene.set_background(np.array([0, 0, 0, 0]))
+        renderer.scene.add_geometry("mesh", mesh, mat)
+        
+        depth_image = renderer.render_to_depth_image()
+        
+        plt.imshow(np.asarray(depth_image))
+        plt.colorbar(label='Normalized Depth')
+        plt.title("Depth Image")
+        plt.axis('off')
+        plt.show()
+        # exit()
 
         # Filter points within the camera's field of view
         
-        intrinsic_matrix = np.array([[fx, 0, cx],
-                                [0, fy, cy],
-                                [0, 0, 1]])
+        # intrinsic_matrix = np.array([[fx, 0, cx],
+        #                         [0, fy, cy],
+        #                         [0, 0, 1]])
 
-        extrinsic_matrix = camera_pose
+        # extrinsic_matrix = camera_pose
         
-        points_3d = np.asarray(pcd.points)
-        normals = np.asarray(pcd.normals)
+        # points_3d = np.asarray(pcd.points)
+        # normals = np.asarray(pcd.normals)
         
-        viewing_direction = get_camera_viewing_direction(extrinsic_matrix)
-        angle_threshold_deg = 75  # Adjust as needed
-        filtered_points, filtered_normals, mask = filter_points_by_normals(points_3d, normals, viewing_direction, angle_threshold_deg)
+        # viewing_direction = get_camera_viewing_direction(extrinsic_matrix)
+        # angle_threshold_deg = 90 # Adjust as needed
+        # filtered_points, filtered_normals, mask = filter_points_by_normals(points_3d, normals, viewing_direction, angle_threshold_deg)
         
-        # transformed_pcd = pcd.transform((camera_pose))
+        # # transformed_pcd = pcd.transform((camera_pose))
         
-        # colors = np.asarray(pcd.colors)[mask]
+        # # colors = np.asarray(pcd.colors)[mask]
         
-        # points = np.asarray(pcd.points)[mask]
+        # # points = np.asarray(pcd.points)[mask]
+        # colors = np.asarray(pcd.colors)
         
-        colors = np.asarray(pcd.colors)
+        # points = np.asarray(pcd.points)
         
-        points = np.asarray(pcd.points)
-        
-        points_2d, colors_2d, depth = project_points_with_colors(points, colors, intrinsic_matrix, extrinsic_matrix, 1800, 1100, scale=scale)
-        # pcd_depth = create_point_cloud_from_depth(depth, camera_intrinsics, scale)
-        # o3d.visualization.draw_geometries([pcd_depth])
+        # points_2d, colors_2d, depth = project_points_with_colors(points, colors, intrinsic_matrix, extrinsic_matrix, 1800, 1100, scale=scale)
+        # # pcd_depth = create_point_cloud_from_depth(depth, camera_intrinsics, scale)
+        # # o3d.visualization.draw_geometries([pcd_depth])
         
         
-        if True:
-            render_image(points_2d, image_width, image_height, colors=colors_2d)  # Omit 'colors' if not available
-            # render_image(points_2d, image_width, image_height, colors=depth)  # Omit 'colors' if not available
-            final_depth_int = (1000 * depth).astype(np.uint16)
-            pad_num = i // 10
-            # get amount of zeros to pad
-            pad = '0' * (4-pad_num)
-            cv2.imwrite(f'{pad}{i}.depth.png', final_depth_int)
-            # plt.imshow(depth, cmap='viridis')
-            # plt.colorbar(label='Normalized Depth')
-            # plt.title("Depth Image")
-            # plt.axis('off')  # Turn off axis numbers and labels
-            # plt.show()
-        print(i, 'processed')
+        # if True:
+        #     # create directory to save depths
+        #     depth_dir = 'point_cloud_depth_imgs'
+        #     if not os.path.exists(depth_dir):
+        #         os.makedirs(depth_dir)
+                
+        #     render_image(points_2d, image_width, image_height, colors=colors_2d)  # Omit 'colors' if not available
+        #     # render_image(points_2d, image_width, image_height, colors=depth)  # Omit 'colors' if not available
+        #     final_depth_int = (1000 * depth).astype(np.uint16)
+        #     pad_num = i // 10
+        #     # get amount of zeros to pad
+        #     pad = '0' * (3-pad_num)
+        #     cv2.imwrite(f'{depth_dir}/{pad}{i}.png', final_depth_int)
+        #     # plt.imshow(depth, cmap='viridis')
+        #     # plt.colorbar(label='Normalized Depth')
+        #     # plt.title("Depth Image")
+        #     # plt.axis('off')  # Turn off axis numbers and labels
+        #     # plt.show()
+        # print(i, 'processed')
 
     """
     
