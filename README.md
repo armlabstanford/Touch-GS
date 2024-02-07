@@ -63,7 +63,7 @@ Touch Data Computation
 
 
 
-## Flow
+## Flow 
 
 The flow can be broadly broken up into the following sections:
 
@@ -139,9 +139,22 @@ Sample image:
 
     Contains the code for processing RGB images and touches with the DenseTact. We have two separate pipelines for touch and RGB.
 
-    ## RGB camera images
+    ## Vision
 
 ![Local Image](misc_imgs/rgb_flow.png)
+
+### Sample Code Steps
+
+```
+
+cd dinov2
+pip install .
+
+# run visual pipeline with sample data
+python3 visual_pipeline.py
+
+```
+
 
 
 
@@ -174,7 +187,6 @@ We can then construct a raw point cloud here by simply combining them. The next 
 
 ## Fusion of Vision and Touch
     
-
 
     
 DenseTact touch images
