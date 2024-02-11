@@ -71,3 +71,7 @@ ns-train depth-nerfacto --data $DATASET_PATH --pipeline.model.depth-loss-mult 0.
 
 # gaussian splatting
 # ns-train depth-gaussian-splatting --data $DATASET_PATH --pipeline.model.depth-loss-mult 0.005 --pipeline.model.depth_loss_type SIMPLE_LOSS colmap --train-split-fraction 0.1
+
+
+# depth nerfacto with uncertainty. We ojnly need to change the depth_loss_type to DEPTH_UNCERTAINTY_WEIGHTED_LOSS
+# ns-train depth-nerfacto --data $DATASET_PATH --pipeline.model.depth-loss-mult 0.005 --pipeline.model.depth_loss_type DEPTH_UNCERTAINTY_WEIGHTED_LOSS colmap --train-split-fraction 0.1
