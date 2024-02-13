@@ -91,7 +91,9 @@ class VisualPipeline:
         """
         self.dpt_model = DPT()
         self.zoe_model = get_zoe_model()
-        self.depth_anything_model = pipeline(task="depth-estimation", model="LiheYoung/depth-anything-large-hf")
+        # self.depth_anything_model = pipeline(task="depth-estimation", model="LiheYoung/depth-anything-large-hf")
+        self.depth_anything_model = None
+        
         
         self.root_img_dir = root_img_dir
         self.colmap_depth_dir = colmap_depth_dir
@@ -314,7 +316,8 @@ class VisualPipeline:
         if model_type == 'zoe':
             depth = self.zoe_model.infer_pil(image)
         elif model_type == 'depth_anything':
-            depth = np.asarray(self.depth_anything_model(image)["depth"])
+            print("Model doesn't exist. Using Zoe. Ha!")
+            depth = self.zoe_model.infer_pil(image)
         else:
             depth = self.dpt_model(image)
             
