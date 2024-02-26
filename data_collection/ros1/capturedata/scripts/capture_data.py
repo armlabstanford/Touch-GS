@@ -17,6 +17,11 @@ from json import JSONEncoder
 from copy import deepcopy
 from franka_core_msgs.msg import EndPointState
 import glob
+import tf2_ros
+from geometry_msgs.msg import TransformStamped
+import tf_conversions
+
+
 """
 :info:
     captures the dt_rgb, dt_depth, depth image, rgb_webcam image, joint info, and pose (transformation matrix) of touch, depth, and rgb camera. 
@@ -35,6 +40,7 @@ class Record(object):
         self.image_tact_sub = message_filters.Subscriber('RunCamera/image_raw_1', Image)
         self.image_webcam_sub = message_filters.Subscriber('RunCamera/webcam', Image)
         self.image_depth_sub = message_filters.Subscriber('/camera/aligned_depth_to_color/image_raw', Image)
+        # self.image_depth_sub = message_filters.Subscriber('/camera/depth/image_rect_raw', Image)
         self.image_tact_depth_sub = message_filters.Subscriber('RunCamera/imgDepth', Image)
 
         self.joint_sub = message_filters.Subscriber('joint_states', JointState)
@@ -103,7 +109,7 @@ class Record(object):
         self.camnum = 7 
         self.dict_t ={
             'cameras':{
-                "camera_{}".format(self.camnum) : {
+                "camera_touch" : {
                 "w": 570,
                 "h": 570,
                 "near": 9.999999747378752e-05,
@@ -113,15 +119,17 @@ class Record(object):
                 }
             },
             'frames' : {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_touch",
                 "file_path": "./train/r_0",
                 "rotation": 0.1,
-                "transform_matrix": self.rotmat.tolist()
+                "transform_matrix": self.rotmat.tolist(),
+                "position": self.pos.tolist(),
+                "quaternion": self.quat.tolist()     
             }   
         }     
         self.dict_tr ={
             'cameras':{
-                "camera_{}".format(self.camnum) : {
+                "camera_touchraw" : {
                 "w": 570,
                 "h": 570,
                 "near": 9.999999747378752e-05,
@@ -131,15 +139,16 @@ class Record(object):
                 }
             },
             'frames' : {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_touchraw",
                 "file_path": "./train/r_0",
                 "rotation": 0.1,
-                "transform_matrix": self.rotmat.tolist()
-            }   
+                "transform_matrix": self.rotmat.tolist(),
+                "position": self.pos.tolist(),
+                "quaternion": self.quat.tolist()              }   
         }     
         self.dict_r ={
             'cameras':{
-                "camera_{}".format(self.camnum) : {
+                "camera_rgb" : {
                 "w": 1920,
                 "h": 1080,
                 "near": 0.1,
@@ -149,32 +158,35 @@ class Record(object):
                 }
             },
             'frames' : {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_rgb",
                 "file_path": "./train/r_0",
                 "rotation": 0.1,
-                "transform_matrix": self.rotmat.tolist()
-            }   
+                "transform_matrix": self.rotmat.tolist(),
+                "position": self.pos.tolist(),
+                "quaternion": self.quat.tolist()              }   
         }     
         self.dict_d ={
             'cameras':{
-                "camera_{}".format(self.camnum) : {
+                "camera_depth" : {
                 "w": 1280,
                 "h": 720,
                 "near": 0.28,
-                "far": 2.0,
+                "far": 3.0,
                 "camera_angle_x": [0.0],
                 'types': ["depth"]
                 }
             },
             'frames' : {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_depth",
                 "file_path": "./train/r_0",
                 "rotation": 0.1,
-                "transform_matrix": self.rotmat.tolist()
-            }   
+                "transform_matrix": self.rotmat.tolist(),
+                "position": self.pos.tolist(),
+                "quaternion": self.quat.tolist()              }   
         }     
         
- 
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         listener = keyboard.Listener(on_press=self.on_press,
                                      on_release=self.on_release)
@@ -273,45 +285,55 @@ class Record(object):
 
 
 
-            
-
         if self.record_all_flag == 1:
+            # IPython.embed()
             self.pos = self.endpoint_pose()['position']
             self.quat = self.endpoint_pose()['orientation']
             self.rotmat = self.endpoint_pose()['ori_mat']   
+
+            img_depth = np.clip(img_depth, 0,3000)/3000*255
+            img_depth= img_depth.astype(int)
             
             cv2.imwrite(os.path.join(self.savetouch_raw, 't_{}.jpg'.format(self.count)), img_touch_raw)
             cv2.imwrite(os.path.join(self.savecolor, 'c_{}.jpg'.format(self.count)), img_color)
             cv2.imwrite(os.path.join(self.savedepth, 'd_{}.jpg'.format(self.count)), img_depth)
             cv2.imwrite(os.path.join(self.savetouch, 'tr_{}.jpg'.format(self.count)), img_touch)
 
-            _,_, tf_touch = self.transform(self.pos, self.quat, self.rotmat, 2)
-            _,_, tf_rgb  = self.transform(self.pos, self.quat, self.rotmat, 3)
-            _,_, tf_depth  = self.transform(self.pos, self.quat, self.rotmat, 4)
 
-            dict_tr = {
-                "camera": "camera_{}".format(self.camnum),
-                "file_path": "./train/t_{}.jpg".format(self.count),
-                "rotation": 0.1,
-                "transform_matrix": tf_touch.tolist()
-            }  
+            pos, quat, tf_rgb  = self.transform(3)
             dict_r = {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_rgb",
                 "file_path": "./train/c_{}.jpg".format(self.count),
                 "rotation": 0.1,
-                "transform_matrix": tf_rgb.tolist()
+                "transform_matrix": tf_rgb.tolist(),
+                "position": pos,
+                "quaternion": quat               
             }  
+            pos, quat, tf_depth  = self.transform(4)
             dict_d = {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_depth",
                 "file_path": "./train/d_{}.jpg".format(self.count),
                 "rotation": 0.1,
-                "transform_matrix": tf_depth.tolist()
+                "transform_matrix": tf_depth.tolist(),
+                "position": pos,
+                "quaternion": quat  
+            }  
+            pos, quat, tf_touch = self.transform(2)
+            dict_tr = {
+                "camera": "camera_touchraw",
+                "file_path": "./train/t_{}.jpg".format(self.count),
+                "rotation": 0.1,
+                "transform_matrix": tf_touch.tolist(),
+                "position": pos,
+                "quaternion": quat  
             }  
             dict_t = {
-                "camera": "camera_{}".format(self.camnum),
+                "camera": "camera_touch",
                 "file_path": "./train/tr_{}.jpg".format(self.count),
                 "rotation": 0.1,
-                "transform_matrix": tf_touch.tolist()
+                "transform_matrix": tf_touch.tolist(),
+                "position": pos,
+                "quaternion": quat  
             }  
             self.tflist_t.append(dict_t)
             self.tflist_tr.append(dict_tr)
@@ -371,8 +393,53 @@ class Record(object):
         quat = np.quaternion(r.as_quat()[0], r.as_quat()[1], r.as_quat()[2], r.as_quat()[3])
         pos = matrix[:3,3]
         return pos, quat
+    def get_transformation_matrix(self, frame1, frame2):
 
-    def transform(self, pos, quat, rotmat, flag=1):
+
+        timeout = None
+        if timeout is not None:
+            timeout = rospy.Duration(timeout)
+
+        try:
+            transform_stamped = self.tf_buffer.lookup_transform(frame1, frame2, rospy.Time())
+            pos, quat, transform_4x4 = self.transform_stamped_to_np_array(transform_stamped)
+            return pos, quat, transform_4x4
+
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+            rospy.loginfo("Transform not available, please make sure that the frames are being published.")
+            return None    
+
+    def transform(self, flag=1):
+        """
+            listen /tf ros and convert it into transformation matrix as well as pos, and quat
+            if flag = 2, transform link0 to ee_touch
+            if flag = 3, transform link0 to ee_rgb
+            if flag = 4, transform link0 to ee_depth
+        """
+        if flag == 2:
+            pos, quat, T_ee = self.get_transformation_matrix("panda_link0", "touch")
+        if flag == 3:
+            pos, quat, T_ee = self.get_transformation_matrix("panda_link0", "rgb")
+        if flag == 4:
+            pos, quat, T_ee = self.get_transformation_matrix("panda_link0", "depth")
+
+
+        return pos, quat, T_ee
+
+    def transform_stamped_to_np_array(self, transform_stamped):
+        trans = transform_stamped.transform.translation
+        rot = transform_stamped.transform.rotation
+
+        quaternion = [rot.x, rot.y, rot.z, rot.w]
+        translation = [trans.x, trans.y, trans.z]
+
+        transform_matrix = tf_conversions.transformations.quaternion_matrix(quaternion)
+        transform_matrix[:-1, -1] = translation
+
+        return translation, quaternion, transform_matrix
+
+
+    def transform_prev(self, pos, quat, rotmat, flag=1):
         """
         convert position of ef pose frame to the pose of the gel
         or convert position of real ee pose to the fake ee pose for the cartesian command 
@@ -430,6 +497,7 @@ class Record(object):
             T_w2ee = T_now
             # for flag 1, use the edge of the densetact 1 (add 25.5mm)
             T_ef2ee[:3,3] = np.array([0,0,touch_finz+25.5/1000])
+
             T_ee = np.dot(T_w2ee, np.linalg.inv(T_ef2ee))
 
         if flag == 2:
@@ -441,7 +509,10 @@ class Record(object):
         if flag == 3:
             # ef to ee_rgb 
             T_w2ef = T_now
-            T_ef2ee[:3,3] = np.array([rgb_distance_x,0,rgb_finz])
+            # T_ef2ee[:3,3] = np.array([rgb_distance_x,0,rgb_finz])
+            T_ef2ee[:3,:] = np.array([[-0.007760780149308,	-0.999741511185599,	-0.021356616306747,	0.099465242256448],
+                                [0.999851114046965,	-0.00742914751176,	-0.015576961219259,	-0.000298863626652],
+                                [0.0154143,	-0.0214744,	0.999651,	-0.051120799439716]])
             T_ee = np.dot(T_w2ef, T_ef2ee)
 
         if flag == 4:
@@ -449,6 +520,9 @@ class Record(object):
             T_w2ef = T_now
             T_ef2ee[:3,3] = np.array([depth_distance_x, depth_distance_y, depth_finz])
             T_ee = np.dot(T_w2ef, T_ef2ee)
+
+        # get inverse - camera to world
+        T_ee = np.linalg.inv(T_ee)
 
         pos1 , quat1 = self.tfmat2pq(T_ee)
 
@@ -504,7 +578,7 @@ class Record(object):
                     print('start stacking the continuous trajectory')
                     self.record_cont_flag = 1
                 if key.char == 'r':
-                    print('save the continuous trajectory')
+                    print('save the all information including tf info')
                     self.record_cont_flag = 2            
                 if key.char == 't':
                     print('save the current data on the list ')

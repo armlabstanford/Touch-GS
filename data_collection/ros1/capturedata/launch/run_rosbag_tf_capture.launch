@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<launch>
+
+
+
+<!-- run rosbag file-->
+<node pkg="rosbag" type="play" name="player" args="-s 15 --clock /media/wkdo/Extreme\ SSD/vtnf_ros1bag/bunny_6.bag"/>
+
+<!-- run rviz from desktop-->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d /home/wkdo/Desktop/touchnerf_rosbag_kinova.rviz" />
+
+
+<node pkg="capturedata" name="pythonnode2" type="knova_capture.py" output="screen"> </node>
+
+
+  <!-- Thumb link distance(btw 15~15_tip):0.423, index finger link distance(btw 3~3_tip): 0.267, subtraction:0.0156 -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_tacsense_1" args="0.0036 -0.00136 -0.09885 0.5 -0.5 0.5 .5 SensorModule tactSensor_1" > </node> -->
+
+<node pkg="tf2_ros" type="static_transform_publisher" name="knova_dtv2" args="0.0 0.0 0.0607 0 0 -0.7071068 0.7071068 end_effector_link touch" ></node>
+
+
+
+</launch>

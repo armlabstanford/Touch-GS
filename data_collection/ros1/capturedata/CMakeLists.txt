@@ -96,6 +96,7 @@ ${THIS_PACKAGE_INCLUDE_DIRS}
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 catkin_python_setup()
 catkin_install_python(PROGRAMS scripts/capture_data.py
+                               scripts/knova_capture.py
 
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
