@@ -391,8 +391,8 @@ class Record(object):
         if self.record_all_flag == 1:
 
 
-            img_depth = np.clip(img_depth, 0,3000)/3000*255
-            img_depth= img_depth.astype(int)
+            # img_depth = np.clip(img_depth, 0,3000)/3000*255
+            # img_depth= img_depth.astype(int)
             print(img_touch.shape)
             print(np.max(img_touch), np.min(img_touch))
             # save depth ptcloud as well
@@ -406,6 +406,7 @@ class Record(object):
 
             # save the pointcloud
             if pcd_now.shape[0] > 0:
+            # if img_color.shape[0] > 0:
                 np.save(os.path.join(self.savetouch, 'tr_{}.npy'.format(self.count)), pcd_now)
                             
                 cv2.imwrite(os.path.join(self.savetouch_raw, 't_{}.png'.format(self.count)), img_touch_raw)

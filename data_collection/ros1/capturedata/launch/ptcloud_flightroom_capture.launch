@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<launch>
+
+<node name="capturedataa" pkg="capturedata" type="capturedata_mocap" output="screen" >
+    <!-- <remap from="/tf" to="/allegroHand_0/tf" /> -->
+    <!-- <remap from="/allegroHand_0/tf_static" to="/tf_static" /> -->
+
+</node>
+ 
+
+ <!-- change into new keyboard input using time reference in sensorimg -->
+<node name="capturedata_keyboard" pkg="capturedata" type="capturedata_key_timeref" respawn="false" output="screen"> </node> 
+
+<node pkg="tactile_camera" name="pythonnode2" type="imgConvert_singlecam_timeref.py" output="screen"> 
+
+
+  <param name="camname1" value="/dev/Densetact_5cm_1" />
+  <param name="tf_name" value="tactSensor_1" />
+
+  <param name="camname2" value="/dev/Densetact_5cm_2" />
+  <param name="tf_name2" value="tactSensor_2" />
+
+</node>
+
+
+  <!-- Thumb link distance(btw 15~15_tip):0.423, index finger link distance(btw 3~3_tip): 0.267, subtraction:0.0156 -->
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_tacsense_1" args="-0.0325 -0.0132 -0.052 0.5 -0.5 0.5 .5 SensorModule tactSensor_1" > -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_tacsense_1" args="0.0036 -0.00136 -0.09885 0.5 -0.5 0.5 .5 SensorModule tactSensor_1" > </node>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_tacsense_2" args="0.0036 0.00827 -0.04685 0 0 0 1 SensorModule realsenseDepth" ></node>
+
+
+
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="virtual_joint_tacsense_1" args="0 0 0.026 0 0 0 1 link_3_tip tactSensor_1" > -->
+
+
+<!-- rosrun dynamic_reconfigure dynparam set /camera/rgb_camera 
+"{'white_balance':3600, 'enable_auto_exposure':False, 'exposure':40, 'enable_auto_white_balance':False, 'auto_exposure_priority':False}" -->
+<!-- Below is same as upper command. Manually found the exposure / WB values.  -->
+
+<!-- http://wiki.ros.org/hokuyo_node/Tutorials/UsingDynparamToChangeHokuyoLaserParameters -->
+<!-- http://wiki.ros.org/rqt_reconfigure -->
+  <node name="$(anon dynparam)" pkg="dynamic_reconfigure" type="dynparam" args="set_from_parameters /camera/rgb_camera">
+
+
+    <param name="white_balance" type="double" value="3600" />
+
+    <param name="enable_auto_exposure" type="bool" value="False" />
+    <param name="enable_auto_white_balance" type="bool" value="False" />
+    <param name="auto_exposure_priority" type="bool" value="False" />
+    <param name="exposure" type="int" value="100" />
+
+
+  </node>
+
+</launch>

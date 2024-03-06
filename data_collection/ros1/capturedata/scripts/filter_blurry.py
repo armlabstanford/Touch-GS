@@ -7,12 +7,12 @@ import json
 import shutil
 
 # List all jpg images in the color/train/ folder
-base_path = '/home/wkdo/Desktop/touchnerf_bunny2'
+base_path = '/home/wkdo/Desktop/block_far_1'
 color_path = os.path.join(base_path, 'color', 'train')
 depth_path = os.path.join(base_path, 'depth', 'train')
 
 # if the path is not made, make the directory
-new_path = '/home/wkdo/Desktop/touchnerf_bunny2_filtered'
+new_path = '/home/wkdo/Desktop/block_far_1_filtered'
 new_color_path = os.path.join(new_path, 'color', 'train')
 new_depth_path = os.path.join(new_path, 'depth', 'train')
 
@@ -26,7 +26,7 @@ if not os.path.exists(new_path):
     os.makedirs(new_color_path)
     os.makedirs(new_depth_path)
 
-image_paths = glob.glob(os.path.join(base_path, 'color', 'train', '*.jpg'))
+image_paths = glob.glob(os.path.join(base_path, 'color', 'train', '*.png'))
 json_paths = os.path.join(base_path, 'color', 'transforms_train.json')
 depth_json_paths = os.path.join(base_path, 'depth', 'transforms_train.json')
 
@@ -121,6 +121,13 @@ for image_path in sharp_depth_images:
     new_image_path = os.path.join(new_depth_path, image_filename)
 
     shutil.copy(image_path, new_image_path)
+sharp_depth_images_npy = [img.replace('color', 'depth').replace('c_', 'd_').replace('.png', '.npy') for img in sharp_images]
+for image_path in sharp_depth_images_npy:
+    image_filename = image_path.split('/')[-1]
+    new_image_path = os.path.join(new_depth_path, image_filename)
+
+    shutil.copy(image_path, new_image_path)
+
 
 
 with open(new_json_path, 'w') as file:

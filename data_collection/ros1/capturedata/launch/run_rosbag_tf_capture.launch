@@ -4,7 +4,7 @@
 
 
 <!-- run rosbag file-->
-<node pkg="rosbag" type="play" name="player" args="-s 15 --clock /media/wkdo/Extreme\ SSD/vtnf_ros1bag/bunny_6.bag"/>
+<node pkg="rosbag" type="play" name="player" args="-s 0 --clock /media/wkdo/Extreme\ SSD/vtnf_ros1bag/block_1.bag"/>
 
 <!-- run rviz from desktop-->
   <node type="rviz" name="rviz" pkg="rviz" args="-d /home/wkdo/Desktop/touchnerf_rosbag_kinova.rviz" />
