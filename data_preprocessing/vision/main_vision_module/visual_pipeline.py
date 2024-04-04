@@ -38,6 +38,9 @@ def get_colmap_depth(root_dir, idx, scale=1000):
     print('Loading colmap depth image:', full_depth_image_path)
     depth_image = cv2.imread(full_depth_image_path, cv2.IMREAD_UNCHANGED).astype(np.float64)/ scale
     
+    depth_image[depth_image >= 100] = 0
+    
+    
     return depth_image, error_image
 
 
@@ -169,7 +172,7 @@ class VisualPipeline:
     def get_colmap_depth_images(self):
         return self.colmap_depth_images
     
-    def refine_depth_all_images(self, visualize=False, normalize_by_reproj_err=False):
+    def refine_depth_all_images(self, visualize=False, use_colmap=True, normalize_by_reproj_err=False):
         errs = []
         for i in range(len(self.images)):
             # predict depth from image
@@ -182,99 +185,119 @@ class VisualPipeline:
             self.images[i] = Image.fromarray(img_np)
             
             predicted_depth = self.predict_depth_from_image(self.images[i])
-            # get colmap sparse(ish) depth
-            colmap_depth = self.colmap_depth_images[i]
             
-            if normalize_by_reproj_err:
-                error_img = self.colmap_errors_images[i]
-                reciprocal_error_img = 1 / error_img
-                reciprocal_error_img[error_img == 0] = 0
+            # plt.imshow(predicted_depth)
+            # plt.show()
+            
+            # show both image and depth
+            if use_colmap:
+                final_depth_int = (self.scale_factor * predicted_depth).astype(np.uint16)
+                depth_paths = os.listdir(self.root_img_dir)
                 
-                max_value = reciprocal_error_img[reciprocal_error_img.nonzero()].max()
+                depth_paths_sorted = sorted(depth_paths)
                 
-                normalized_error_map = reciprocal_error_img / max_value
-                
-                normalized_error_map[error_img == 0] = 0
-                refined_depth = self.refine_depth(predicted_depth, colmap_depth, normalized_error_map)
-                
-            else:
-                refined_depth = self.refine_depth(predicted_depth, colmap_depth, None)
-            # refine depth with a scale factor and offset
-            # predicted_depth = predicted_depth / -1
-            
-            valid_locations = np.logical_and(~np.isnan(colmap_depth), colmap_depth != 0)
-
-            # Compute the difference only at valid locations
-            difference = np.abs(refined_depth - colmap_depth) * valid_locations
-
-            # Calculate the average error (excluding invalid locations)
-            average_error = np.sum(difference) / np.sum(valid_locations)
-            errs.append(average_error)
-            if visualize:
-                self.visualize(predicted_depth, refined_depth, predicted_depth - refined_depth, labels=['Zoe Depth', 'Refined Depth', 'Depth Difference'])
-            
-            # get image path 
-            img_path = self.img_paths[i].split('.')[0][7:]
-            # # construct file path and save as depth image
-            # final_depth_int = (self.scale_factor * refined_depth).astype(np.uint16)
-            final_depth_int = (self.scale_factor * refined_depth).astype(np.uint16)
-            
-            
-            depth_paths = os.listdir(self.colmap_depth_dir)
-            depth_paths_sorted = sorted(depth_paths)
-            
-            if len(self.colmap_errors_images) > 0:
-                depth_valid_selected = depth_paths_sorted[i*2]
-            else:
                 depth_valid_selected = depth_paths_sorted[i]
-                    
-            cv2.imwrite(f'{self.output_depth_path}/{depth_valid_selected}', final_depth_int)
-            print(f'Saved depth image {self.output_depth_path}/{depth_valid_selected}')
-            # # save depth image matrix as npy
-            if self.save_as_npy:
-                file_path = os.path.join(f'{self.output_depth_path}_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(refined_depth, file_path)
-                
-                # resize refined depth to half
-                refined_depth2 = cv2.resize(refined_depth, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_2_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(refined_depth2, file_path)
-                
-                refined_depth4 = cv2.resize(refined_depth2, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_4_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(refined_depth4, file_path)
-                
-                refined_depth8 = cv2.resize(refined_depth4, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_8_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(refined_depth8, file_path)
+                        
+                cv2.imwrite(f'{self.output_depth_path}/{depth_valid_selected}', final_depth_int)
+                print(f'Saved depth image {self.output_depth_path}/{depth_valid_selected}')
+            # begin refining depth if need be (for now we don't)
             
-            # compute uncertainty
-            uncertainty = compute_uncertainty_map_with_edges(refined_depth, colmap_depth, edge_weight=0, distance_uncertainty_weight=0.04, proximity_weight=50, depth_difference_weight=0, dilation_size=5)
-            if visualize:
-                self.visualize(colmap_depth, refined_depth, uncertainty, labels=['Colmap Depth', 'Refined Depth', 'Depth Uncertainty'])
+            
+            # get colmap sparse(ish) depth
+        #     colmap_depth = self.colmap_depth_images[i]
+            
+        #     if normalize_by_reproj_err:
+        #         error_img = self.colmap_errors_images[i]
+        #         reciprocal_error_img = 1 / error_img
+        #         reciprocal_error_img[error_img == 0] = 0
+                
+        #         max_value = reciprocal_error_img[reciprocal_error_img.nonzero()].max()
+                
+        #         normalized_error_map = reciprocal_error_img / max_value
+                
+        #         normalized_error_map[error_img == 0] = 0
+        #         refined_depth = self.refine_depth(predicted_depth, colmap_depth, normalized_error_map)
+                
+        #     else:
+        #         refined_depth = self.refine_depth(predicted_depth, colmap_depth, None)
+        #     # refine depth with a scale factor and offset
+        #     # predicted_depth = predicted_depth / -1
+            
+        #     refined_depth = np.clip(refined_depth, a_min=0, a_max=None)
+            
+        #     valid_locations = np.logical_and(~np.isnan(colmap_depth), colmap_depth != 0)
 
-            # create uncertainty depth image and npy file
+        #     # Compute the difference only at valid locations
+        #     difference = np.abs(refined_depth - colmap_depth) * valid_locations
+
+        #     # Calculate the average error (excluding invalid locations)
+        #     average_error = np.sum(difference) / np.sum(valid_locations)
+        #     errs.append(average_error)
+        #     if visualize:
+        #         self.visualize(colmap_depth, predicted_depth, colmap_depth - refined_depth, labels=['GT Depth', 'Refined Depth', 'Depth Difference'])
+        #         # self.visualize(predicted_depth, refined_depth, predicted_depth - refined_depth, labels=['Zoe Depth', 'Refined Depth', 'Depth Difference'])
+            
+        #     # get image path 
+        #     img_path = self.img_paths[i].split('.')[0][7:]
+        #     # # construct file path and save as depth image
+            
+        #     if use_colmap:
+        #         final_depth_int = (self.scale_factor * refined_depth).astype(np.uint16)
+        #     else:
+        #         final_depth_int = (self.scale_factor * predicted_depth).astype(np.uint16)
+            
+            
+        #     depth_paths = os.listdir(self.colmap_depth_dir)
+        #     depth_paths_sorted = sorted(depth_paths)
+            
+        #     if len(self.colmap_errors_images) > 0:
+        #         depth_valid_selected = depth_paths_sorted[i*2]
+        #     else:
+        #         depth_valid_selected = depth_paths_sorted[i]
+                    
+        #     cv2.imwrite(f'{self.output_depth_path}/{depth_valid_selected}', final_depth_int)
+        #     print(f'Saved depth image {self.output_depth_path}/{depth_valid_selected}')
+        #     # # save depth image matrix as npy
+        #     if self.save_as_npy:
+        #         file_path = os.path.join(f'{self.output_depth_path}_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(refined_depth, file_path)
                 
-            final_depth_uncertainty_int = (self.scale_factor * uncertainty).astype(np.uint16)
-            cv2.imwrite(f'{self.output_depth_path}_uncertainty/{depth_valid_selected}', final_depth_uncertainty_int)
-            print(f'Saved depth uncertainty image {self.output_depth_path}_uncertainty/{depth_valid_selected}')
+        #         # resize refined depth to half
+        #         refined_depth2 = cv2.resize(refined_depth, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_2_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(refined_depth2, file_path)
                 
-            if self.save_as_npy:
-                file_path = os.path.join(f'{self.output_depth_path}_uncertainty_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(uncertainty, file_path)
+        #         refined_depth4 = cv2.resize(refined_depth2, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_4_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(refined_depth4, file_path)
                 
-                uncertainty2 = cv2.resize(refined_depth, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_uncertainty_2_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(uncertainty2, file_path)
+        #         refined_depth8 = cv2.resize(refined_depth4, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_8_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(refined_depth8, file_path)
+            
+        #     # compute uncertainty
+        #     uncertainty = compute_uncertainty_map_with_edges(refined_depth, colmap_depth, edge_weight=0, distance_uncertainty_weight=0.04, proximity_weight=50, depth_difference_weight=0, dilation_size=5)
                 
-                uncertainty4 = cv2.resize(refined_depth2, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_uncertainty_4_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(uncertainty4, file_path)
+        #     final_depth_uncertainty_int = (self.scale_factor * uncertainty).astype(np.uint16)
+        #     cv2.imwrite(f'{self.output_depth_path}_uncertainty/{depth_valid_selected}', final_depth_uncertainty_int)
+        #     print(f'Saved depth uncertainty image {self.output_depth_path}_uncertainty/{depth_valid_selected}')
                 
-                uncertainty8 = cv2.resize(refined_depth4, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-                file_path = os.path.join(f'{self.output_depth_path}_uncertainty_8_npy', f'{img_path}.npy')
-                save_depth_image_matrix_as_npy(uncertainty8, file_path)
-        print('average error:', np.mean(errs))
+        #     if self.save_as_npy:
+        #         file_path = os.path.join(f'{self.output_depth_path}_uncertainty_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(uncertainty, file_path)
+                
+        #         uncertainty2 = cv2.resize(refined_depth, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_uncertainty_2_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(uncertainty2, file_path)
+                
+        #         uncertainty4 = cv2.resize(refined_depth2, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_uncertainty_4_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(uncertainty4, file_path)
+                
+        #         uncertainty8 = cv2.resize(refined_depth4, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+        #         file_path = os.path.join(f'{self.output_depth_path}_uncertainty_8_npy', f'{img_path}.npy')
+        #         save_depth_image_matrix_as_npy(uncertainty8, file_path)
+        # print('average error:', np.mean(errs))
                 
     def refine_depth(self, predicted_depth, colmap_depth, error_map=None):
             
@@ -345,5 +368,5 @@ if __name__ == '__main__':
     visual_pipeline = VisualPipeline(root_img_dir=args.root_img_dir, colmap_depth_dir=args.colmap_depth_dir, output_depth_path=args.output_depth_path)
     
     
-    # visual_pipeline = VisualPipeline(root_img_dir='bunny_square_images', colmap_depth_dir='bunny_square_sparse', output_depth_path='bunny_square_dense_depth')
-    visual_pipeline.refine_depth_all_images(visualize=viz)
+    # visual_pipeline = VisualPipeline(root_img_dir='bunny_blender_raw', colmap_depth_dir='gt_depth_png', output_depth_path='bunny_square_dense_depth')
+    visual_pipeline.refine_depth_all_images(visualize=viz, use_colmap=True)
