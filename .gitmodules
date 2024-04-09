@@ -4,9 +4,6 @@
 [submodule "train/nerfs/nerfstudio"]
 	path = train/nerfs/nerfstudio
 	url = https://github.com/peasant98/nerfstudio
-[submodule "train/nerfs/gaussian_splatting"]
-	path = train/nerfs/gaussian_splatting
-	url = https://github.com/peasant98/gaussian-splatting
-[submodule "dinov2"]
-	path = dinov2
-	url = https://github.com/peasant98/dinov2
+[submodule "touch-gs-data"]
+	path = touch-gs-data
+	url = https://github.com/armlabstanford/touch-gs-data
