@@ -1,5 +1,11 @@
-matplotlib
+scipy
 numpy
 
-torch
+matplotlib
+opencv-python
+Pillow
+
+open3d
+
 gpytorch
+transformers
