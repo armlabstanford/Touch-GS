@@ -1,8 +1,8 @@
 [submodule "data_preprocessing/touch/gpis"]
 	path = data_preprocessing/touch/gpis
 	url = https://github.com/armlabstanford/GPIS
-[submodule "train/nerfs/nerfstudio"]
-	path = train/nerfs/nerfstudio
+[submodule "nerfstudio"]
+	path = nerfstudio
 	url = https://github.com/peasant98/nerfstudio
 [submodule "touch-gs-data"]
 	path = touch-gs-data
