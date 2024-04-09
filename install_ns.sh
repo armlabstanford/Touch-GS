@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-cd train/nerfs/nerfstudio
+cd nerfstudio
 
 # install nerfstudio
 pip install .
