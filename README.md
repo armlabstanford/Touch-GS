@@ -1,13 +1,19 @@
-# Visual Tactile Neural Field
+# 🐇 Touch-GS: Visual-Tactile Supervised 3D Gaussian Splatting
+
+### [Aiden Swann*](https://aidenswann.com/), [Matthew Strong](https://peasant98.github.io/), [Won Kyung Do](https://arm.stanford.edu/people/wonkyung-do), [Gadiel Sznaier Camps](https://msl.stanford.edu/people/gadielsznaiercamps/), [Mac Schwager](https://web.stanford.edu/~schwager/), [Monroe Kennedy III](https://monroekennedy3.com/)
 
 <!-- insert image here -->
-![Local Image](misc_imgs/mvp_architecture.png)
+![Local Image](https://touch-gs.github.io/static/images/method.png)
 
 
 
-Aiden Swann, Matt Strong, Won-Kyung Do
 
-This repo houses code and data for our work in Visual Tactile Neural fields.
+
+[![Project](https://img.shields.io/badge/Project_Page-Touch_GS-green)](hhttps://touch-gs.github.io/)
+[![ArXiv](https://img.shields.io/badge/Arxiv-Touch_GS-red)](https://arxiv.org/abs/2403.09875) 
+
+
+This repo houses code and data for our work in Touch-GS.
 
 
 ## Quick Start and Setup
@@ -15,237 +21,45 @@ This repo houses code and data for our work in Visual Tactile Neural fields.
 
 The pipeline has been tested on Ubuntu 22.04.
 
+
+### Requirements:
+
+- CUDA 11+
+- Python 3.8+
+
+### Dependencies (from Nerfstudio)
+
+Install PyTorch with CUDA (this repo has been tested with CUDA 11.7 and CUDA 11.8) and [tiny-cuda-nn](https://github.com/NVlabs/tiny-cuda-nn).
+`cuda-toolkit` is required for building `tiny-cuda-nn`.
+
+For CUDA 11.8:
+
+```bash
+pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118
+
+conda install -c "nvidia/label/cuda-11.8.0" cuda-toolkit
+pip install ninja git+https://github.com/NVlabs/tiny-cuda-nn/#subdirectory=bindings/torch
+```
+
+See [Dependencies](https://github.com/nerfstudio-project/nerfstudio/blob/main/docs/quickstart/installation.md#dependencies)
+in the Installation documentation for more.
+
 **Repo Cloning**
 To clone the repo, since we have submodules, run the following command:
 
 ```bash
-git clone --recurse-submodules https://github.com/armlabstanford/Visual-Tactile-Neural-Field
+git clone --recurse-submodules https://github.com/armlabstanford/Touch-GS
 ```
 
-## Quick Start With Mock Data
+## Install Our Version of Nerfstudio
+
+You can find more detailed instructions in Nerfstudio's README.
 
 
 ```bash
 # install nerfstudio
-cd train/nerfs/nerfstudio
-pip install --upgrade pip setuptools
-pip install -e .
-
-# run nerfstudio
-
-
-
+bash install_ns.sh
 ```
 
 
-
-**Data Collection**
-
-1. Install Blender, which we use as for simulated data to train a NeRF. Steps can be found [here](https://docs.blender.org/manual/en/latest/getting_started/installing/linux.html).
-
-Once Blender is installed, 
-
-**Data**
-
-N/A. The data will be the output from the data collection.
-
-**Data Fusion**
-
-RBG Depth Computation
-
-
-
-Touch Data Computation
-
-
-**NeRF Training, Rendering, Exporting**
-
-
-
-
-## Flow 
-
-The flow can be broadly broken up into the following sections:
-
-1. Data Collection
-
-    This contains code to create the data from simulation in Blender and real life.
-    We use a 7 DoF Franka Panda for our experiments.
-
-2. Data
-
-    This contains the data in Blender in simulation and on the real robot. The format is as follows:
-
-
-    ```
-    data
-    |---real
-    |   |---touchnerf_<date-1>
-            |---touchnerf_rgb_depth_<date-1>
-                |---color
-                |---depth
-                |---recorded_path
-                |---touch
-                |---touch_raw
-            |---touchnerf_touch_1_<date-1>
-            |---touchnerf_touch_2<date-1>
-    |   |---touchnerf_<date-2>
-    |   |---...
-    |---sim
-        |---blender
-            |---dataset
-    ```
-
-    We expect a unified format for the raw data, but only require two sources of data: Images, $I_{cam}$, and DenseTact depth images, $D_{DT}$ which form dataset $\mathcal{D}$.
-
-
-    ### Blender data
-
-    Within the Blender folder, we have a `dataset` folder which contains the train views, test views, corresponding `transforms_<type>.json` file, and depth images (if depth supervision is desired). Note that the depth ground truth images (in `.EXR` format) are the ground truth and can serve as a sanity check when implementing NeRF loss functions that use depth supervision.
-
-    Steps to Run Blender
-    
-    ========TBD============
-    
-    
-
-
-    Within each `touchnerf_<rgb_depth|touch>..` folder are the following folders and contents:
-
-    `color/` folder: contains a `transforms_train.json` which contains the transform (from world frame to camera frame) of each camera and the image path. It also contains a `train/` folder with all of the images in it. 
-
-    Sample image:
-
-![Local Image](./data/real/touchnerf_092723/touchnerf_rgbdepth_092723/color/train/c_0.jpg)
-
-
-`depth/` folder: contains the Intel Realsense depth images from experiments. We do not use these in our experiments however. This folder contains a `transforms_train.json` as well as a `train/` folder with a `.npy` and `.png` file that contains the Intel Realsense depth image. It it not recommended however.
-
-`recorded_path/` folder: not used. But you can check it out.
-
-`touch/` folder: contains the predicted depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each predicted depth in the `train/` folder has an `npy` file and `png` file associated with it.
-
-![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch/train/tr_7.jpg)
-
-
-`touch_raw/` folder: contains the raw depths from DenseTact. Only the `touchnerf_touch_..` folders will have actual touches in them. Each raw depth in the `train/` folder has a `png` file associated with it.
-
-Sample image:
-
-![Local Image](data/real/touchnerf_092723/touchnerf_touch_1_092723/touch_raw/train/t_58.jpg)
-
-
-3. Data Preprocessing
-
-    Contains the code for processing RGB images and touches with the DenseTact. We have two separate pipelines for touch and RGB.
-
-    ## Vision
-
-![Local Image](misc_imgs/rgb_flow.png)
-
-### Sample Code Steps
-
-```
-
-cd dinov2
-pip install .
-
-# run visual pipeline with sample data
-python3 visual_pipeline.py
-
-```
-
-
-
-
-The goal of the RGB camera flow is to compute dense depth and uncertainty maps from RGB images.
-
-Steps:
-
-1. With the camera images, we first run a tool called [Colmap](https://colmap.github.io/) to compute the camera poses (with an arbitrary frame and scale compared to the real world ).
-
-    We run Colmap on real world data and don't need to run it on Blender data (because the camera poses are ground truth and we have access to ground truth depth maps), but still support it. 
-
-2. After running colmap, we will have the output as camera poses, images and the corresponding points detected with them. From here, we perform some kind of dense reconstruction to get a fused point cloud that gives a rough estimate of the surfaces.
-
-3. We use a DPT (Dense Prediction Transformer) model to compute a dense prediction map from an image. We can then *refine* this dense prediction map with the very dense colmap points to align the dense prediction and make sure the corresponding depth and colmap points are very close.
-
-4. With the colmap points and dense depth map, compute the uncertainty of the image w.r.t depth. As a MVP, we use nearest neighbor uncertainty; e.g., points in the depth image farther away from colmap points have more uncertainty (which makes sense)
-
-5. Store these depth and uncertainty maps.
-
-    
-
-## Touch
-![Touch Flow](misc_imgs/touch_flow.png)
-
-At a high level, the touch pipeline first requires a set of DenseTact touches (each has an associated point cloud) and the corresponding transforms from world frame to DT frame.
-
-We can then construct a raw point cloud here by simply combining them. The next step is to use a Gaussian Process Implicit Surface (GPIS) to create a 3d representation of a surface with the object(s). The GPIS gives us where the surface would be as well as variance. To create the resulting depth and uncertainty images. We can perform ray marching on the RGB camera poses to compute for a given camera, what would the depth and uncertainty view based on touches on an object?
-
-    
-
-## Fusion of Vision and Touch
-    
-
-    
-DenseTact touch images
-
-
-
-
-
-4. NeRF training
-
-We use forked versions of  `nerfstudio` and `gaussian_splatting` for training nerfs. We have forked version of both repos with support for new loss functions that support dense depth with uncertainty.
-
-To install nerfstudio:
-
-```bash
-cd train/nerfs/nerfstudio
-pip install --upgrade pip setuptools
-pip install -e .
-```
-
-
-To install gaussian splatting
-
-
-5. NeRF evaluation
-
-To evaluate trained NeRFs, simply run: (TBD)
-
-6. NeRF rendering and exporting
-
-To render and export trained NeRF renderings to a point cloud, run the following: (TBD)
-
-
-## Misc
-
-1. The `legacy` folder contains prior code with a different approach that we had.
-
-2. The `utils` folder contains useful utils such as a colmap command line tool.
-
-## Environment Setup
-
-We use conda to run our experiments.
-
-
-## Running the Pipeline
-
-Running the pipeline end to end consists of the following steps:
-
-1. Collect Data
-
-
-
-## Datasets 
-
-The datasets consist of two components - one for collecting RGB and depth images, and another for gathering touch image information.
-
-The folder named 'touchnerf_rgbdepth' houses the captured color images and depth images. The corresponding transformation for each image is found in the 'transforms_train.json' file. For additional camera parameters, please refer to the 'multicamera.py' file in the 'simulated_data' branch.
-
-Here is the link to the dataset:
-
-https://drive.google.com/drive/folders/1T0hKlzefZOtlZaseSx5uLss1g5FmX8bv?usp=sharing
 
