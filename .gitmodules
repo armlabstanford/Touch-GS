@@ -1,9 +1,9 @@
-[submodule "nerfstudio"]
-	path = nerfstudio
-	url = https://github.com/peasant98/nerfstudio
 [submodule "touch-gs-data"]
 	path = touch-gs-data
 	url = https://github.com/armlabstanford/touch-gs-data
 [submodule "gpis"]
 	path = gpis
 	url = https://github.com/armlabstanford/GPIS
+[submodule "nerfstudio"]
+	path = nerfstudio
+	url = https://github.com/peasant98/nerfstudio

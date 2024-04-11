@@ -7,5 +7,4 @@ Pillow
 
 open3d
 
-gpytorch
 transformers

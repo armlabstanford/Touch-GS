@@ -45,6 +45,13 @@ if __name__ == '__main__':
         
         os.system(full_cmd)
         
+        full_cmd = f'ns-render dataset --load-config={config_yml_path} --output-path={exp_name}_renders'
+        print(full_cmd)
+        
+        os.system(full_cmd)
+        
+        # run render
+        
         amt += 1
         if amt == past_n_trials:
             break

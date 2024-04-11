@@ -261,7 +261,7 @@ def visualize_two(ds_gs_visual_depth, full_fused_depth_map):
     plt.tight_layout()
     plt.show()
     
-def get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_depth_dir, touch_var_dir, idx, grounded_depth, touch_depths, vision_depths):
+def get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_depth_dir, touch_var_dir, idx, grounded_depth, touch_depths, vision_depths, is_real_world=True):
     grounded_depth_image = cv2.imread(f'{grounded_depth_dir}/{grounded_depth}', cv2.IMREAD_ANYDEPTH)
     touch_depth_image = cv2.imread(f'{touch_depth_dir}/{touch_depths[idx]}', cv2.IMREAD_ANYDEPTH)
     vision_depth_image = cv2.imread(f'{vision_depth_dir}/{vision_depths[idx]}', cv2.IMREAD_ANYDEPTH)
@@ -274,7 +274,9 @@ def get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_de
     
     touch_uncertainty_image = touch_uncertainty_image / 1000
     
-    grounded_depth_image = cv2.resize(grounded_depth_image, (1280, 720), interpolation=cv2.INTER_LINEAR)
+    if is_real_world:
+        grounded_depth_image = cv2.resize(grounded_depth_image, (1280, 720), interpolation=cv2.INTER_LINEAR)
+        
     
     return (grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image)
 
@@ -311,7 +313,7 @@ def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_ima
     
     return ds_gs_visual_depth, vision_depth_image, vision_uncertainty
  
-def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir, viz=False, output_dir='vision_aligned', fused_output_dir='fused', touch_var_dir='touch_var', use_uncertainty=True):
+def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir, viz=False, output_dir='vision_aligned', fused_output_dir='fused', touch_var_dir='touch_var', use_uncertainty=True, is_real_world=True):
     """Fuse grounded depth with touch depth data.
 
     Args:
@@ -338,7 +340,9 @@ def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir,
     for idx, grounded_depth in enumerate(grounded_depths):
         img_number = touch_depths[idx].split('/')[-1][:-4]
         
-        grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image = get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_depth_dir, touch_var_dir, idx, grounded_depth, touch_depths, vision_depths)
+        grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image = get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, 
+                                                                                                                vision_depth_dir, touch_var_dir, idx, grounded_depth, 
+                                                                                                                touch_depths, vision_depths, is_real_world)
         
         # show all three depth maps in one plot
         if viz:
@@ -402,6 +406,9 @@ if __name__ == "__main__":
     parser.add_argument('--fused_output_dir', type=str, required=True, help='Output directory for fused data.')
     
     
+    parser.add_argument('--is_sim', action='store_true', help='Whether or not experiment is sim (blender).')
+    
+    
     args = parser.parse_args()
     
     root_dir = args.root_dir
@@ -415,4 +422,6 @@ if __name__ == "__main__":
     full_fused_output_dir = os.path.join(root_dir, args.fused_output_dir)
     full_touch_var = os.path.join(root_dir, args.touch_var)
     
-    fuse_vision_and_touch(full_aligning_depths, full_touch_depth, full_zoe_depth, args.viz, full_vision_output_dir, full_fused_output_dir, full_touch_var, use_uncertainty)
+    fuse_vision_and_touch(full_aligning_depths, full_touch_depth, full_zoe_depth, args.viz, 
+                          full_vision_output_dir, full_fused_output_dir, full_touch_var, use_uncertainty,
+                          not args.is_sim)
