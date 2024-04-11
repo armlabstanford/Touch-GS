@@ -49,6 +49,13 @@ To clone the repo, since we have submodules, run the following command:
 git clone --recurse-submodules https://github.com/armlabstanford/Touch-GS
 ```
 
+## Installing the GPIS code
+
+
+We have implemented our own GPIS (Gaussian Process Implicit Surface) from scratch [here](https://github.com/armlabstanford/GPIS/tree/fb1764443e48eaca193aafd2d20fc529d329fb48)!
+
+Please follow the steps to install the repo there.
+
 ## Install Our Version of Nerfstudio
 
 You can find more detailed instructions in Nerfstudio's README.
