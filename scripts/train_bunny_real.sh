@@ -52,6 +52,6 @@ cd touch-gs-data
 ns-train depth-gaussian-splatting --data bunny_real_data/ --viewer.quit-on-train-completion True --pipeline.model.depth-loss-mult 0.005 --pipeline.model.depth-loss-type DEPTH_UNCERTAINTY_WEIGHTED_LOSS  --pipeline.model.uncertainty_weight 0.01 nerfstudio-data --train-split-fraction 0.08
 
 export IS_REAL_WORLD=True
-python3 ../experiment_utils/run_eval.py --input_dir outputs/bunny_real_data/depth-gaussian-splatting --output_dir ../experiments --exp_name bunny_real --past_n_trials 1
+python3 ../experiment_utils/run_eval.py --input_dir outputs/bunny_real_data/depth-gaussian-splatting --output_dir ../experiments --exp_name bunny_real_1 --past_n_trials 1
 
 cd ..
