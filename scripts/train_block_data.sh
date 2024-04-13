@@ -47,8 +47,7 @@ python3 utils/create_point_cloud_from_touches.py --root_dir 'touch-gs-data/block
 
 cd touch-gs-data
 
-ns-train depth-gaussian-splatting --data block_data/ --viewer.quit-on-train-completion True --pipeline.model.depth-loss-mult 0.05 nerfstudio-data --train-split-fraction 0.8
-
+ns-train depth-gaussian-splatting --data block_data/ --viewer.quit-on-train-completion True --pipeline.model.depth-loss-mult 0.25 --pipeline.model.depth-loss-type DEPTH_UNCERTAINTY_WEIGHTED_LOSS  --pipeline.model.uncertainty_weight 1 nerfstudio-data --train-split-fraction 0.8
 export IS_REAL_WORLD=True
 
 python3 ../experiment_utils/run_eval.py --input_dir outputs/block_data/depth-gaussian-splatting --output_dir ../experiments --exp_name block_data --past_n_trials 1
