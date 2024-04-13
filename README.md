@@ -65,9 +65,9 @@ You can find more detailed instructions in Nerfstudio's README.
 bash install_ns.sh
 ```
 
-## Getting Data Setup and Training
+## Getting Touch-GS Data Setup and Training
 
-We have made an end-to-end pipeline that will take care of setting up the data, training, and evaluating our method.
+We have made an end-to-end pipeline that will take care of setting up the data, training, and evaluating our method. Note that we will release the code for running the ablations (which includes the baselines) soon!
 
 To prepare each scene:
 
@@ -75,12 +75,15 @@ To prepare each scene:
 
 ```sh
 cd touch-gs-data
+# install requirements in touch-gs-data
 pip install -r requirements.txt
 cd ..
+
+pip install -r requirements.txt
 ```
 
 
-1. Real Bunny Scene
+1. Real Bunny Scene (our method)
 
 ```sh
 bash scripts/train_bunny_real.sh
