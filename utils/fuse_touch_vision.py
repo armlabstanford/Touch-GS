@@ -7,6 +7,7 @@ import os
 
 import numpy as np
 import cv2
+from PIL import Image
 import matplotlib.pyplot as plt 
 
 import create_uncertainty_from_depth as cu
@@ -14,7 +15,15 @@ import create_uncertainty_from_depth as cu
 import argparse
 
 from scipy.optimize import minimize
+from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
+# global, explicit for now; SAM model path
+SAM_CHKPT_DIR = '/home/ishikaa/Touch-GS/sam_checkpoints/sam_vit_h_4b8939.pth'
+SAM_MODEL_TYPE = 'vit_h'
+
+def open_rgb_image(idx, rgb_root):
+    image = Image.open(os.path.join(rgb_root,f'{idx}.png'))
+    return np.asarray(image)
 
 def create_sparse_depth_map(dense_depth_map, keep_percentage=0.01):
     # Create a mask with the same shape as the dense depth map, initially all False
@@ -280,7 +289,18 @@ def get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_de
     
     return (grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image)
 
-def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, is_real_world=True):
+def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, rgb_image):
+    # instantiate SAM
+    sam = sam_model_registry[SAM_MODEL_TYPE](checkpoint=SAM_CHKPT_DIR)
+    mask_generator = SamAutomaticMaskGenerator(sam)
+
+    # segment objects
+    import pdb
+    pdb.set_trace()
+    masks = mask_generator.generate(rgb_image)
+    for object_id in masks:
+        pass
+
     # first align (Depth Supervised Gaussian Splatting)
     scale, offset = compute_scale_and_offset_best(grounded_depth_image, vision_depth_image, None, (0, None), (None, None))
     
@@ -314,7 +334,7 @@ def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_ima
     
     return ds_gs_visual_depth, vision_depth_image, vision_uncertainty
  
-def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir, viz=False, output_dir='vision_aligned', fused_output_dir='fused', touch_var_dir='touch_var', use_uncertainty=True, is_real_world=True):
+def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir, rgb_dir, viz=False, output_dir='vision_aligned', fused_output_dir='fused', touch_var_dir='touch_var', use_uncertainty=True):
     """Fuse grounded depth with touch depth data.
 
     Args:
@@ -341,18 +361,15 @@ def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir,
     for idx, grounded_depth in enumerate(grounded_depths):
         img_number = touch_depths[idx].split('/')[-1][:-4]
         
-        grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image = get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, 
-                                                                                                                vision_depth_dir, touch_var_dir, idx, grounded_depth, 
-                                                                                                                touch_depths, vision_depths, is_real_world)
-        
+        grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image = get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_depth_dir, touch_var_dir, idx, grounded_depth, touch_depths, vision_depths)
+        rgb_image = open_rgb_image(img_number, rgb_dir)
         # show all three depth maps in one plot
         if viz:
             visualize_all(touch_depth_image, vision_depth_image, grounded_depth_image)
             
         # TODO: sparsify the grounded realsense depth map, but not for sparse points in the blender scene
         grounded_depth_image = create_sparse_depth_map(grounded_depth_image, keep_percentage=0.01)
-        
-        ds_gs_visual_depth, vision_depth_image, vision_uncertainty = align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, is_real_world=is_real_world)
+        ds_gs_visual_depth, vision_depth_image, vision_uncertainty = align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, rgb_image)
         
         # fuse depth maps
         if use_uncertainty:
@@ -398,6 +415,7 @@ if __name__ == "__main__":
     
     parser.add_argument('--touch_depth', type=str, required=True, help='Path to the touch depth data file.')
     parser.add_argument('--touch_var', type=str, required=True, help='Path to the touch var data file.')
+    parser.add_argument('--rgb', type=str, help='Path to RGB data file.')
     
     parser.add_argument('--viz', action='store_true', help='Whether or not to viz.')
     parser.add_argument('--use_uncertainty', action='store_true', help='Whether or not to viz.')
@@ -422,7 +440,8 @@ if __name__ == "__main__":
     full_vision_output_dir = os.path.join(root_dir, args.vision_output_dir)
     full_fused_output_dir = os.path.join(root_dir, args.fused_output_dir)
     full_touch_var = os.path.join(root_dir, args.touch_var)
+    # import pdb
+    # pdb.set_trace()
+    full_rgb = os.path.join(root_dir, args.rgb) if args.rgb else os.path.join(root_dir, 'imgs')
     
-    fuse_vision_and_touch(full_aligning_depths, full_touch_depth, full_zoe_depth, args.viz, 
-                          full_vision_output_dir, full_fused_output_dir, full_touch_var, use_uncertainty,
-                          not args.is_sim)
+    fuse_vision_and_touch(full_aligning_depths, full_touch_depth, full_zoe_depth, full_rgb, args.viz, full_vision_output_dir, full_fused_output_dir, full_touch_var, use_uncertainty)
