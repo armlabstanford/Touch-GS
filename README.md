@@ -100,7 +100,7 @@ bash scripts/train_mirror_data.sh
 bash scripts/train_block_data.sh
 ```
 
-4. Bunny Blender Scene (in progress)
+4. Bunny Blender Scene (processing to a unified format in progress)
 
 ## Get Renders
 
