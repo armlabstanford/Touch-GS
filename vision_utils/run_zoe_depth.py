@@ -5,7 +5,6 @@ import cv2
 import numpy as np
 
 from dpt_module import DPT
-from transformers import pipeline
 from zoe_depth import get_zoe_model
 
 import matplotlib.pyplot as plt
@@ -62,7 +61,7 @@ class VisualPipeline:
         """
         self.dpt_model = DPT()
         self.zoe_model = get_zoe_model()
-        self.depth_anything_model = pipeline(task="depth-estimation", model="LiheYoung/depth-anything-base-hf")
+        # self.depth_anything_model = pipeline(task="depth-estimation", model="LiheYoung/depth-anything-base-hf")
         # self.depth_anything_model = None
         
         self.root_img_dir = root_img_dir

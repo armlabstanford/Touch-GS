@@ -18,8 +18,8 @@ from scipy.optimize import minimize
 from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
 # global, explicit for now; SAM model path
-SAM_CHKPT_DIR = '/home/ishikaa/Touch-GS/sam_checkpoints/sam_vit_h_4b8939.pth'
-SAM_MODEL_TYPE = 'vit_h'
+SAM_CHKPT_DIR = '/home/ishikaa/Touch-GS/sam_checkpoints/sam_vit_b_01ec64.pth'
+SAM_MODEL_TYPE = 'vit_b'
 
 def open_rgb_image(idx, rgb_root):
     image = Image.open(os.path.join(rgb_root,f'{idx}.png'))
@@ -295,17 +295,20 @@ def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_ima
     mask_generator = SamAutomaticMaskGenerator(sam)
 
     # segment objects
-    import pdb
-    pdb.set_trace()
     masks = mask_generator.generate(rgb_image)
-    for object_id in masks:
-        pass
 
-    # first align (Depth Supervised Gaussian Splatting)
-    scale, offset = compute_scale_and_offset_best(grounded_depth_image, vision_depth_image, None, (0, None), (None, None))
+    for object in masks:
+        # masks for object-wise scaling and offset prediction
+        mask = object['segmentation']
+        masked_vision_image, masked_grounded_depth_image = vision_depth_image.copy(), grounded_depth_image.copy()
+        masked_grounded_depth_image[mask == 0] = 0
+        masked_vision_image[mask == 0] = 0
+
+        # first align (Depth Supervised Gaussian Splatting)
+        scale, offset = compute_scale_and_offset_best(masked_grounded_depth_image, masked_vision_image, None, (0, None), (None, None))
     
-    # compute a new vision depth map
-    vision_depth_image = (scale * vision_depth_image) + offset
+        # compute a new vision depth map
+        vision_depth_image[mask] = (scale * vision_depth_image[mask]) + offset
     
     # this is the DS-GS visual depth map for baseline
     ds_gs_visual_depth = np.copy(vision_depth_image)
