@@ -128,6 +128,10 @@ def get_all_point_clouds(image_dir, touch_depth_dir, touch_var_dir, camera_trans
             
             # take depths with var leq than 0.7
             # depth[var > 0.7] = 0
+            
+            # resize everything to dim of image
+            depth = cv2.resize(depth, (image.shape[0], image.shape[1]))
+            var = cv2.resize(var, (image.shape[1], image.shape[0]))
         
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             
@@ -135,6 +139,7 @@ def get_all_point_clouds(image_dir, touch_depth_dir, touch_var_dir, camera_trans
             
             image = cv2.imread(f'{image_dir}/{image_filename}')
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            print(camera_intrinsics)
             points, colors = get_point_cloud_from_depth_and_color(depth, image, camera_intrinsics, camera_extrinsics)
             if limited_points_xyz is None:
                 limited_points_xyz = points

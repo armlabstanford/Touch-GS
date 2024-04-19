@@ -60,6 +60,6 @@ if __name__ == '__main__':
         
         # Optionally, show the image
         # uncomment to see the touch depth
-        # touch_depth_image = cv2.imread(os.path.join(output_depth_path, f'{img_number}.png'), cv2.IMREAD_ANYDEPTH)
+        # touch_depth_image = cv2.imread(os.path.join(output_depth_path, f'{img_number}.png'), cv2.IMREAD_ANYDEPTH) / 1000
         # plt.imshow(touch_depth_image, cmap='viridis')
         # plt.show()

@@ -280,7 +280,7 @@ def get_depths_by_idx(img_number, grounded_depth_dir, touch_depth_dir, vision_de
     
     return (grounded_depth_image, touch_depth_image, vision_depth_image, touch_uncertainty_image)
 
-def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image):
+def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, is_real_world=True):
     # first align (Depth Supervised Gaussian Splatting)
     scale, offset = compute_scale_and_offset_best(grounded_depth_image, vision_depth_image, None, (0, None), (None, None))
     
@@ -293,7 +293,8 @@ def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_ima
     # filter out diffs greater than 3 meters between touch and vision before the second stage of alignment
     diff = vision_depth_image - touch_depth_image
     diff[diff > 3] = 0
-    touch_depth_image_to_align = touch_depth_image * (diff > 0)
+    
+    touch_depth_image_to_align = touch_depth_image * (diff > 0) if is_real_world else touch_depth_image
     mask = touch_depth_image_to_align > 0
     
     # second align (our method Touch-GS)
@@ -351,7 +352,7 @@ def fuse_vision_and_touch(grounded_depth_dir, touch_depth_dir, vision_depth_dir,
         # TODO: sparsify the grounded realsense depth map, but not for sparse points in the blender scene
         grounded_depth_image = create_sparse_depth_map(grounded_depth_image, keep_percentage=0.01)
         
-        ds_gs_visual_depth, vision_depth_image, vision_uncertainty = align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image)
+        ds_gs_visual_depth, vision_depth_image, vision_uncertainty = align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_image, is_real_world=is_real_world)
         
         # fuse depth maps
         if use_uncertainty:
