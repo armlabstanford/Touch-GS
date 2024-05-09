@@ -1,6 +1,6 @@
 # 🐇 Touch-GS: Visual-Tactile Supervised 3D Gaussian Splatting
 
-### [Aiden Swann*](https://aidenswann.com/), [Matthew Strong*](https://peasant98.github.io/), [Won Kyung Do](https://arm.stanford.edu/people/wonkyung-do), [Gadiel Sznaier Camps](https://msl.stanford.edu/people/gadielsznaiercamps/), [Mac Schwager](https://web.stanford.edu/~schwager/), [Monroe Kennedy III](https://monroekennedy3.com/)
+### [Aiden Swann*](https://aidenswann.com/), [Matthew Strong*](https://peasant98.github.io/), [Won Kyung Do](https://wonkyungdo.github.io/website_wkdo/), [Gadiel Sznaier Camps](https://msl.stanford.edu/people/gadielsznaiercamps/), [Mac Schwager](https://web.stanford.edu/~schwager/), [Monroe Kennedy III](https://monroekennedy3.com/)
 
 <!-- insert image here -->
 ![Local Image](https://touch-gs.github.io/static/images/method.png)
