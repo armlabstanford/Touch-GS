@@ -295,20 +295,33 @@ def align_vision_depth(grounded_depth_image, touch_depth_image, vision_depth_ima
     mask_generator = SamAutomaticMaskGenerator(sam)
 
     # segment objects
+    # import pdb
+    # pdb.set_trace()
     masks = mask_generator.generate(rgb_image)
+    global_vision_depth_image = vision_depth_image.copy()
 
     for object in masks:
         # masks for object-wise scaling and offset prediction
-        mask = object['segmentation']
-        masked_vision_image, masked_grounded_depth_image = vision_depth_image.copy(), grounded_depth_image.copy()
-        masked_grounded_depth_image[mask == 0] = 0
-        masked_vision_image[mask == 0] = 0
+        for object in masks:
+            mask = object['segmentation']
+            masked_grounded_depth_image = grounded_depth_image.copy()
+            masked_grounded_depth_image[mask == 0] = 0
 
-        # first align (Depth Supervised Gaussian Splatting)
-        scale, offset = compute_scale_and_offset_best(masked_grounded_depth_image, masked_vision_image, None, (0, None), (None, None))
-    
-        # compute a new vision depth map
-        vision_depth_image[mask] = (scale * vision_depth_image[mask]) + offset
+            # object-level alignmentfor near/close objects
+            if np.any(masked_grounded_depth_image[mask] < 2):
+                # Object-wise alignment for close objects
+                masked_vision_image = vision_depth_image.copy()
+                masked_vision_image[mask == 0] = 0
+                scale, offset = compute_scale_and_offset_best(masked_grounded_depth_image, masked_vision_image, None, (0, None), (None, None))
+                vision_depth_image[mask] = (scale * vision_depth_image[mask]) + offset
+            else:
+                # global alignment copy
+                global_vision_depth_image[mask] = 0
+
+    # global alignment for all other areas
+    scale, offset = compute_scale_and_offset_best(grounded_depth_image, global_vision_depth_image, None, (1, 1), (None, None))
+    global_vision_depth_image += offset
+    vision_depth_image[global_vision_depth_image > 0] = global_vision_depth_image[global_vision_depth_image > 0]
     
     # this is the DS-GS visual depth map for baseline
     ds_gs_visual_depth = np.copy(vision_depth_image)
