@@ -130,9 +130,11 @@ def get_all_point_clouds(image_dir, touch_depth_dir, touch_var_dir, camera_trans
             # depth[var > 0.7] = 0
             
             # resize everything to dim of image
-            depth = cv2.resize(depth, (image.shape[0], image.shape[1]))
-            var = cv2.resize(var, (image.shape[1], image.shape[0]))
-        
+            
+            if image.shape[0] != depth.shape[0]:
+                depth = cv2.resize(depth, (image.shape[0], image.shape[1]))
+                var = cv2.resize(var, (image.shape[1], image.shape[0]))
+            
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             
             camera_extrinsics = camera_transformations[image_filename.split('.')[0]]
