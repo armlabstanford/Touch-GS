@@ -78,6 +78,11 @@ To prepare each scene:
 0. Install Python packages
 
 ```sh
+cd touch-gs-data
+# install requirements in touch-gs-data
+pip install -r requirements.txt
+cd ..
+
 pip install -r requirements.txt
 ```
 
@@ -104,9 +109,9 @@ bash scripts/train_block_data.sh
 
 ## Get Renders
 
-The renders on the test set are created in the main script under `exp-name-renders` within `touch-gs-data`.
+To be announced!
 
 
 ## Get Rendered Video
 
-You can get rendered videos with a custom camera path detailed [here](https://docs.nerf.studio/quickstart/first_nerf.html#render-video). This is how we were able to get our videos on our website.
+To be announced!
